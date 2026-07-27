@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -7,255 +8,382 @@ import yfinance as yf
 from data_engine import fetch_data
 from features import add_features
 from models import TradingModel, run_monte_carlo, get_markov_regime
+from patterns import detect_and_draw_patterns
 import portfolio as pf
 
-st.set_page_config(page_title="Universal Trading Predictor", layout="wide")
+st.set_page_config(page_title="Professional Trading Chart", layout="wide")
 
-st.title("📈 Universal Trading Predictor (Maximal Edge)")
-st.markdown("""
-This app applies **Machine Learning**, **Markov Chains**, and **Monte Carlo Simulations** 
-to any tradable asset. *Note: 100% accuracy is impossible in finance. The goal is to 
-maximize statistical edge and strictly manage risk.*
-""")
+# ============================================================
+# SIDEBAR CONFIGURATION
+# ============================================================
+st.sidebar.header("Trading Configuration")
+symbol = st.sidebar.text_input("Trading Symbol", value="BTC-USD", key="symbol_input")
+interval = st.sidebar.selectbox("Timeframe", options=["1d", "1h", "5m"], index=0, key="interval_select")
 
-# Sidebar inputs
-st.sidebar.header("Configuration")
-symbol = st.sidebar.text_input("Asset Symbol (e.g., BTC-USD, GC=F, AAPL, NG=F)", value="BTC-USD")
-interval = st.sidebar.selectbox("Timeframe", options=["1d", "1h", "5m"], index=0)
 period_map = {"1d": "2y", "1h": "1mo", "5m": "5d"}
 period = period_map[interval]
 
-force_retrain = st.sidebar.checkbox("Force Retrain AI Model", value=False)
+retrain_ai = st.sidebar.checkbox("Retrain AI Model", value=False, key="retrain_ai_chk")
 
 st.sidebar.divider()
-st.sidebar.header("Auto-Refresh")
-auto_refresh = st.sidebar.checkbox("Enable Auto-Refresh", value=False)
 
+# Auto-Refresh Settings
+st.sidebar.subheader("Auto-Refresh", divider=False)
+auto_refresh = st.sidebar.checkbox("Enable Auto-Refresh", value=False, key="auto_refresh_chk")
 if auto_refresh:
-    refresh_interval = st.sidebar.selectbox("Refresh Interval", options=["10s", "30s", "1m", "5m"], index=1)
+    refresh_interval = st.sidebar.selectbox(
+        "Refresh Interval",
+        options=["10s", "30s", "1m", "5m"],
+        index=1,
+        key="refresh_interval_select"
+    )
     run_every_val = refresh_interval
-    st.sidebar.info(f"Smooth auto-refresh enabled: {run_every_val}")
 else:
     run_every_val = None
 
-fetch_clicked = st.sidebar.button("Fetch & Analyze Data")
+st.sidebar.divider()
 
-# First boot or forced manual fetch
+# Chart Settings
+st.sidebar.subheader("Chart Settings", divider=False)
+chart_height = st.sidebar.selectbox(
+    "Chart Height",
+    options=["Standard (700px)", "Large (900px)", "Full (1100px)"],
+    index=0,
+    key="chart_height_select"
+)
+height_map = {
+    "Standard (700px)": 700,
+    "Large (900px)": 900,
+    "Full (1100px)": 1100
+}
+chart_h = height_map.get(chart_height, 700)
+
+st.sidebar.divider()
+
+# Technical Indicators
+st.sidebar.subheader("Technical Indicators", divider=False)
+ind_col1, ind_col2, ind_col3 = st.sidebar.columns(3)
+
+with ind_col1:
+    show_sma20 = st.checkbox("SMA-20", value=True, key=f"chk_sma20_{symbol}_{interval}")
+    show_bb = st.checkbox("Bollinger", value=True, key=f"chk_bb_{symbol}_{interval}")
+
+with ind_col2:
+    show_sma50 = st.checkbox("SMA-50", value=True, key=f"chk_sma50_{symbol}_{interval}")
+    show_trendlines = st.checkbox("Trend Channel", value=False, key=f"chk_trend_{symbol}_{interval}")
+
+with ind_col3:
+    show_sma200 = st.checkbox("SMA-200", value=False, key=f"chk_sma200_{symbol}_{interval}")
+
+st.sidebar.divider()
+
+# Subplot Selection
+st.sidebar.subheader("Secondary Indicator", divider=False)
+subplot_choice = st.sidebar.selectbox(
+    "Subplot",
+    options=["MACD (12,26,9)", "RSI (14)", "Volume", "None"],
+    index=0,
+    key="subplot_select"
+)
+
+st.sidebar.divider()
+
+# Zoom/View Control
+st.sidebar.subheader("View Control", divider=False)
+zoom_options = ["Last 7", "Last 14", "Last 30", "Last 60", "Last 90", "Last 120", "Last 200", "Last 365", "All Data"]
+saved_zoom_idx = st.session_state.get(f"zoom_preset_idx_{symbol}_{interval}", 8)
+if saved_zoom_idx >= len(zoom_options):
+    saved_zoom_idx = 8
+
+selected_zoom = st.sidebar.selectbox(
+    "Time Window",
+    options=zoom_options,
+    index=saved_zoom_idx,
+    key=f"zoom_selector_{symbol}_{interval}"
+)
+new_zoom_idx = zoom_options.index(selected_zoom)
+st.session_state[f"zoom_preset_idx_{symbol}_{interval}"] = new_zoom_idx
+
+st.sidebar.divider()
+
+# Chart Patterns
+st.sidebar.subheader("Chart Patterns", divider=False)
+st.sidebar.caption("Auto-detects selected patterns and draws on chart")
+pat_col1, pat_col2 = st.sidebar.columns(2)
+
+with pat_col1:
+    show_wolfe_wave = st.checkbox(
+        "🌊 Wolfe Wave",
+        value=False,
+        key=f"pat_wolfe_{symbol}_{interval}",
+        help="Bullish 5-point pattern"
+    )
+    show_bat_pattern = st.checkbox(
+        "🦇 Bearish Bat",
+        value=False,
+        key=f"pat_bat_{symbol}_{interval}",
+        help="Harmonic XABCD pattern"
+    )
+
+with pat_col2:
+    show_cup_handle = st.checkbox(
+        "☕ Inv. Cup",
+        value=False,
+        key=f"pat_cup_{symbol}_{interval}",
+        help="Inverted cup & handle"
+    )
+    show_falling_wedge = st.checkbox(
+        "📐 Falling Wedge",
+        value=False,
+        key=f"pat_fw_{symbol}_{interval}",
+        help="Bullish wedge pattern"
+    )
+
+st.sidebar.divider()
+
+# Analysis Panels
+st.sidebar.subheader("Analysis Panels", divider=False)
+show_deep_dive = st.sidebar.checkbox("Show AI Deep Dive", value=False, help="ML models & quantum analysis", key="show_deep_dive_chk")
+show_portfolio = st.sidebar.checkbox("Show Portfolio", value=False, help="Trading account & positions", key="show_portfolio_chk")
+
+# ============================================================
+# DATA FETCHING & PROCESSING
+# ============================================================
+fetch_clicked = st.sidebar.button("📥 Fetch & Analyze")
+
 if fetch_clicked or ('df' not in st.session_state):
     if fetch_clicked:
         with st.spinner(f"Fetching data for {symbol}..."):
             df = fetch_data(symbol, period=period, interval=interval)
     else:
         df = fetch_data(symbol, period=period, interval=interval)
-        
+    
     if df is not None and len(df) > 0:
-        if fetch_clicked:
-            with st.spinner("Calculating technical indicators..."):
-                df_feat = add_features(df)
-            with st.spinner("Running AI Models..."):
-                model = TradingModel(symbol, interval)
-                model.train_or_load(df_feat, force_retrain=force_retrain)
-                prediction = model.predict_next(df_feat)
-                regime = get_markov_regime(df_feat)
-        else:
-            df_feat = add_features(df)
-            model = TradingModel(symbol, interval)
-            model.train_or_load(df_feat, force_retrain=force_retrain)
-            prediction = model.predict_next(df_feat)
-            regime = get_markov_regime(df_feat)
-            
+        df_feat = add_features(df)
+        model = TradingModel(symbol, interval)
+        model.train_or_load(df_feat, force_retrain=retrain_ai)
+        prediction = model.predict_next(df_feat)
+        regime = get_markov_regime(df_feat)
+        
         st.session_state['df'] = df
         st.session_state['df_feat'] = df_feat
         st.session_state['prediction'] = prediction
         st.session_state['regime'] = regime
         st.session_state['symbol'] = symbol
     elif fetch_clicked:
-        st.error("Failed to fetch data or empty dataset returned. Check the symbol.")
+        st.error(f"Failed to fetch data for {symbol}")
         st.stop()
 
-
-# Define the fragment that updates automatically without reloading the whole page!
+# ============================================================
+# AUTO-REFRESH FRAGMENT (preserves chart zoom)
+# ============================================================
 @st.fragment(run_every=run_every_val)
 def render_dashboard():
-    # If auto-refresh is on, fetch the latest data QUIETLY inside the fragment
-    if auto_refresh and 'df' in st.session_state and not fetch_clicked:
-        df = fetch_data(symbol, period=period, interval=interval)
-        if df is not None and len(df) > 0:
-            df_feat = add_features(df)
-            model = TradingModel(symbol, interval)
-            model.train_or_load(df_feat, force_retrain=False)
-            prediction = model.predict_next(df_feat)
-            regime = get_markov_regime(df_feat)
-            
-            st.session_state['df'] = df
-            st.session_state['df_feat'] = df_feat
-            st.session_state['prediction'] = prediction
-            st.session_state['regime'] = regime
-            st.session_state['symbol'] = symbol
-
-    if 'df' in st.session_state and st.session_state['symbol'] == symbol:
-        df = st.session_state['df']
-        df_feat = st.session_state['df_feat']
-        prediction = st.session_state['prediction']
-        regime = st.session_state['regime']
-        
-        last_close = df['Close'].iloc[-1]
-        
-        # Create Tabs
-        tab1, tab2 = st.tabs(["🤖 AI Prediction Engine", "💼 Paper Trading Portfolio"])
-        
-        with tab1:
-            # 1. Top Metrics
-            prev_close = df['Close'].iloc[-2]
-            pct_change = ((last_close - prev_close) / prev_close) * 100
-            
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Current Price", f"{last_close:.2f}", f"{pct_change:.2f}%")
-            col2.metric("Markov Regime Filter", regime)
-            
-            sig = prediction.get('signal', 'ERROR')
-            prob_up = prediction.get('prob_up', 0.5) * 100
-            color = "normal" if sig == "NEUTRAL" else "inverse" 
-            col3.metric("AI Signal (Next Candle)", sig, f"{prob_up:.1f}% probability UP", delta_color=color if sig=="SELL (DOWN)" else "normal")
-            
-            # 2. Main Chart
-            st.subheader(f"Price Action & Technicals ({symbol})")
-            fig = go.Figure(data=[go.Candlestick(x=df.index,
-                            open=df['Open'],
-                            high=df['High'],
-                            low=df['Low'],
-                            close=df['Close'],
-                            name="Price")])
-            
-            if 'BB_High' in df_feat.columns:
-                fig.add_trace(go.Scatter(x=df_feat.index, y=df_feat['BB_High'], line=dict(color='gray', width=1, dash='dash'), name='BB High'))
-                fig.add_trace(go.Scatter(x=df_feat.index, y=df_feat['BB_Low'], line=dict(color='gray', width=1, dash='dash'), name='BB Low'))
-                
-            fig.update_layout(xaxis_rangeslider_visible=False, template='plotly_dark', height=500, uirevision=f"{symbol}_{interval}", dragmode='pan')
-            st.plotly_chart(fig, use_container_width=True)
-            
-            # 3. Monte Carlo Risk Management
-            st.subheader("Monte Carlo Risk Analysis (Value at Risk)")
-            st.markdown("Simulating 1,000 possible future price paths based on historical volatility.")
-            
-            with st.spinner("Running 1,000 Monte Carlo simulations..."):
-                mc_results = run_monte_carlo(df_feat, days=20, simulations=1000)
-                
-            if mc_results:
-                mc_fig = go.Figure()
-                paths = mc_results['paths']
-                for i in range(50):
-                    mc_fig.add_trace(go.Scatter(y=paths[i], mode='lines', line=dict(color='rgba(0,100,255,0.1)'), showlegend=False))
-                    
-                mean_path = paths.mean(axis=1)
-                mc_fig.add_trace(go.Scatter(y=mean_path, mode='lines', line=dict(color='white', width=3), name='Mean Expected'))
-                
-                mc_fig.update_layout(title="Future Price Paths (20 Candles)", template='plotly_dark', height=400, uirevision=f"{symbol}_{interval}", dragmode='pan')
-                st.plotly_chart(mc_fig, use_container_width=True)
-                
-                st.info(f"**Risk Management Output:** The 95% Confidence Value-at-Risk (Worst Case) is **{mc_results['var_95']:.2f}**. Consider placing your hard stop-loss near this level.")
-            else:
-                st.warning("Not enough data to run Monte Carlo simulations.")
-                
-        with tab2:
-            st.header("💼 Paper Trading Account")
-            
-            # Load state and fetch current prices for active positions to calculate accurate PnL
+    """Auto-refresh data while preserving chart zoom state"""
+    
+    # Auto-refresh: fetch new data quietly
+    if auto_refresh and 'df' in st.session_state:
+        _df_new = fetch_data(symbol, period=period, interval=interval)
+        if _df_new is not None and len(_df_new) > 0:
+            st.session_state['df'] = _df_new
+            st.session_state['df_feat'] = add_features(_df_new)
+    
+    # Get data from session state
+    if 'df' not in st.session_state:
+        st.info("Click **📥 Fetch & Analyze** to load data")
+        return
+    
+    df = st.session_state['df']
+    df_feat = st.session_state['df_feat']
+    prediction = st.session_state.get('prediction', {'signal': 'N/A', 'prob_up': 0.5})
+    regime = st.session_state.get('regime', 'N/A')
+    
+    last_close = df['Close'].iloc[-1]
+    prev_close = df['Close'].iloc[-2] if len(df) > 1 else last_close
+    pct_change = ((last_close - prev_close) / prev_close * 100) if prev_close != 0 else 0
+    
+    # ============================================================
+    # MAIN CONTENT
+    # ============================================================
+    
+    # Top Metrics
+    st.markdown("## 📈 Professional Trading Chart")
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Current Price", f"${last_close:.2f}", f"{pct_change:+.2f}%")
+    col2.metric("AI Signal", prediction.get('signal', 'N/A'), f"{prediction.get('prob_up', 0.5)*100:.1f}% UP")
+    col3.metric("Markov Regime", regime)
+    col4.metric("Data Points", len(df))
+    
+    # ============================================================
+    # BUILD THE CHART
+    # ============================================================
+    
+    # Determine data range based on zoom selection
+    data_len = len(df)
+    zoom_map = {
+        "Last 7": 7, "Last 14": 14, "Last 30": 30, "Last 60": 60,
+        "Last 90": 90, "Last 120": 120, "Last 200": 200, "Last 365": 365,
+        "All Data": data_len
+    }
+    zoom_bars = zoom_map.get(selected_zoom, data_len)
+    df_zoom = df.iloc[-zoom_bars:].copy() if zoom_bars < data_len else df.copy()
+    df_feat_zoom = df_feat.iloc[-zoom_bars:].copy() if zoom_bars < data_len else df_feat.copy()
+    
+    # Create candlestick chart with optional subplot
+    if subplot_choice == "None":
+        fig = go.Figure(data=[
+            go.Candlestick(
+                x=df_zoom.index,
+                open=df_zoom['Open'],
+                high=df_zoom['High'],
+                low=df_zoom['Low'],
+                close=df_zoom['Close'],
+                name="OHLC"
+            )
+        ])
+        has_subplot = False
+    else:
+        fig = make_subplots(
+            rows=2, cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.15,
+            row_heights=[0.7, 0.3]
+        )
+        fig.add_trace(
+            go.Candlestick(
+                x=df_zoom.index,
+                open=df_zoom['Open'],
+                high=df_zoom['High'],
+                low=df_zoom['Low'],
+                close=df_zoom['Close'],
+                name="OHLC"
+            ),
+            row=1, col=1
+        )
+        has_subplot = True
+    
+    # Add Technical Indicators to main chart
+    if show_sma20 and 'SMA_20' in df_feat_zoom.columns:
+        fig.add_trace(
+            go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['SMA_20'],
+                      line=dict(color='yellow', width=1), name='SMA-20', mode='lines'),
+            row=1 if has_subplot else None, col=1 if has_subplot else None
+        )
+    
+    if show_sma50 and 'SMA_50' in df_feat_zoom.columns:
+        fig.add_trace(
+            go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['SMA_50'],
+                      line=dict(color='orange', width=1), name='SMA-50', mode='lines'),
+            row=1 if has_subplot else None, col=1 if has_subplot else None
+        )
+    
+    if show_sma200 and 'SMA_50' in df_feat_zoom.columns:
+        fig.add_trace(
+            go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom.get('SMA_50', df_feat_zoom['SMA_50']),
+                      line=dict(color='purple', width=1), name='SMA-200', mode='lines'),
+            row=1 if has_subplot else None, col=1 if has_subplot else None
+        )
+    
+    if show_bb:
+        if 'BB_High' in df_feat_zoom.columns and 'BB_Low' in df_feat_zoom.columns:
+            fig.add_trace(
+                go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['BB_High'],
+                          line=dict(color='gray', width=0.5, dash='dash'), name='BB Upper', mode='lines'),
+                row=1 if has_subplot else None, col=1 if has_subplot else None
+            )
+            fig.add_trace(
+                go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['BB_Low'],
+                          line=dict(color='gray', width=0.5, dash='dash'), name='BB Lower',
+                          fill='tonexty', mode='lines'),
+                row=1 if has_subplot else None, col=1 if has_subplot else None
+            )
+    
+    # Add Subplot Indicator
+    if has_subplot:
+        if subplot_choice == "MACD (12,26,9)" and 'MACD' in df_feat_zoom.columns:
+            fig.add_trace(
+                go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['MACD'],
+                          line=dict(color='white', width=1), name='MACD', mode='lines'),
+                row=2, col=1
+            )
+            if 'MACD_Signal' in df_feat_zoom.columns:
+                fig.add_trace(
+                    go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['MACD_Signal'],
+                              line=dict(color='red', width=1), name='Signal', mode='lines'),
+                    row=2, col=1
+                )
+        elif subplot_choice == "RSI (14)" and 'RSI' in df_feat_zoom.columns:
+            fig.add_trace(
+                go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['RSI'],
+                          line=dict(color='cyan', width=1), name='RSI', mode='lines'),
+                row=2, col=1
+            )
+            fig.add_hline(y=70, line_dash="dash", line_color="red", row=2, col=1)
+            fig.add_hline(y=30, line_dash="dash", line_color="green", row=2, col=1)
+        elif subplot_choice == "Volume":
+            fig.add_trace(
+                go.Bar(x=df_zoom.index, y=df_zoom['Volume'], name='Volume',
+                      marker_color='rgba(0,100,255,0.3)'),
+                row=2, col=1
+            )
+    
+    # Add Chart Patterns
+    if any([show_wolfe_wave, show_bat_pattern, show_cup_handle, show_falling_wedge]):
+        detect_and_draw_patterns(
+            fig, df_feat_zoom,
+            has_sub=has_subplot,
+            show_wolfe=show_wolfe_wave,
+            show_cup=show_cup_handle,
+            show_bat=show_bat_pattern,
+            show_wedge=show_falling_wedge
+        )
+    
+    # Update layout
+    fig.update_layout(
+        template='plotly_dark',
+        height=chart_h,
+        xaxis_rangeslider_visible=False,
+        uirevision=f"tvpro_{symbol}_{interval}",
+        dragmode='pan',
+        hovermode='x unified'
+    )
+    
+    if has_subplot:
+        fig.update_xaxes(title_text="Date", row=2, col=1)
+        fig.update_yaxes(title_text=subplot_choice, row=2, col=1)
+    
+    st.plotly_chart(fig, use_container_width=True, key=f"main_chart_{symbol}_{interval}")
+    
+    # ============================================================
+    # ANALYSIS PANELS (Optional)
+    # ============================================================
+    
+    if show_deep_dive:
+        st.subheader("🤖 AI Deep Dive")
+        col1, col2 = st.columns(2)
+        col1.metric("Signal Confidence", f"{prediction.get('prob_up', 0.5)*100:.1f}%")
+        col2.metric("Quantile Signals", str(prediction.get('quantile_signals', 'N/A')))
+        st.markdown(f"**Regime Filter:** {regime}")
+    
+    if show_portfolio:
+        st.subheader("💼 Portfolio & Positions")
+        try:
             port_state = pf.load_portfolio()
-            current_prices = {symbol: last_close} # Always inject the currently viewed symbol
+            summary = pf.get_portfolio_summary({symbol: last_close})
             
-            # Fetch prices for other holdings (lazy load)
-            for sym in port_state["positions"].keys():
-                if sym != symbol:
-                    try:
-                        current_prices[sym] = yf.Ticker(sym).fast_info.last_price
-                    except:
-                        pass
-                        
-            summary = pf.get_portfolio_summary(current_prices)
-            
-            # 1. Account Summary
             c1, c2, c3 = st.columns(3)
-            c1.metric("Available Cash", f"${summary['cash']:,.2f}")
-            c2.metric("Unrealized PnL", f"${summary['unrealized_pnl']:,.2f}", f"{(summary['unrealized_pnl'] / (summary['total_value'] - summary['unrealized_pnl']) * 100) if summary['total_value'] > summary['cash'] else 0:.2f}%")
-            c3.metric("Total Account Value", f"${summary['total_value']:,.2f}")
+            c1.metric("Cash", f"${summary['cash']:,.2f}")
+            c2.metric("Active Positions", len(summary['active_positions']))
+            c3.metric("Total Value", f"${summary['total_value']:,.2f}")
             
-            st.divider()
-            
-            # 2. Execution Panel
-            st.subheader(f"Trade Execution: {symbol}")
-            st.write(f"**Current Price:** ${last_close:,.4f}")
-            
-            with st.form("trade_form"):
-                col_a, col_b = st.columns(2)
-                qty = col_a.number_input(f"Quantity of {symbol}", min_value=0.0, value=1.0, step=0.1)
-                
-                # Action buttons
-                buy_btn = col_b.form_submit_button("🟩 BUY (Open Long / Close Short)")
-                sell_btn = col_b.form_submit_button("🟥 SELL (Open Short / Close Long)")
-                
-                if buy_btn:
-                    success, msg = pf.buy_asset(symbol, qty, last_close)
-                    if success:
-                        st.success(msg)
-                        st.rerun(scope="fragment") # Refresh just this fragment
-                    else:
-                        st.error(msg)
-                        
-                if sell_btn:
-                    success, msg = pf.sell_asset(symbol, qty, last_close)
-                    if success:
-                        st.success(msg)
-                        st.rerun(scope="fragment")
-                    else:
-                        st.error(msg)
-                        
-            st.divider()
-            
-            # 3. Active Positions
-            st.subheader("Active Positions")
             if len(summary['active_positions']) > 0:
                 df_pos = pd.DataFrame(summary['active_positions'])
-                # Format columns nicely
-                df_pos['Quantity'] = df_pos['Quantity'].round(6)
-                df_pos['Avg Price'] = df_pos['Avg Price'].apply(lambda x: f"${x:,.2f}")
-                df_pos['Current Price'] = df_pos['Current Price'].apply(lambda x: f"${x:,.2f}")
-                df_pos['Current Value'] = df_pos['Current Value'].apply(lambda x: f"${x:,.2f}")
-                df_pos['Unrealized PnL'] = df_pos['Unrealized PnL'].apply(lambda x: f"${x:,.2f}")
-                df_pos['PnL %'] = df_pos['PnL %'].apply(lambda x: f"{x:.2f}%")
-                
-                def color_position_type(val):
-                    if val == 'LONG': return 'color: green'
-                    elif val == 'SHORT': return 'color: red'
-                    return ''
-                    
-                st.dataframe(df_pos.style.map(color_position_type, subset=['Type']), use_container_width=True)
-            else:
-                st.info("No active positions.")
-                
-            st.divider()
-            
-            # 4. Trade History for Selected Symbol
-            st.subheader(f"Trade History ({symbol})")
-            
-            sym_history = [h for h in summary['history'] if h['symbol'] == symbol]
-            if len(sym_history) > 0:
-                # Reverse to show newest first
-                df_hist = pd.DataFrame(sym_history)[::-1]
-                df_hist['price'] = df_hist['price'].apply(lambda x: f"${x:,.2f}")
-                df_hist['total'] = df_hist['total'].apply(lambda x: f"${x:,.2f}")
-                df_hist['realized_pnl'] = df_hist['realized_pnl'].apply(lambda x: f"${x:,.2f}")
-                
-                # Highlight Buy/Sell
-                def color_action(val):
-                    if 'BUY' in str(val): return 'color: green'
-                    elif 'SELL' in str(val): return 'color: red'
-                    return ''
-                    
-                st.dataframe(df_hist.style.map(color_action, subset=['action']), use_container_width=True)
-            else:
-                st.info(f"No previous trades found for {symbol}.")
+                st.dataframe(df_pos, use_container_width=True)
+        except Exception as e:
+            st.warning(f"Portfolio data unavailable: {str(e)}")
 
-
-# Call the fragment function
+# Render the dashboard (auto-refreshing if enabled)
 render_dashboard()
+
+st.sidebar.divider()
+st.sidebar.caption("*Chart zoom is preserved during auto-refresh*")

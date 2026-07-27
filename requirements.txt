@@ -1,0 +1,24 @@
+# Core dependencies
+streamlit
+pandas
+numpy
+yfinance
+
+# ML/Backtesting
+scikit-learn
+xgboost
+lightgbm
+joblib
+
+# Technical Analysis
+ta
+
+# Visualization
+plotly
+matplotlib
+
+# Optimization
+scipy
+
+# Utilities
+python-dotenv

@@ -1,0 +1,415 @@
+================================================================================
+  INTRADAY QUANTITATIVE TRADING SYSTEM — IMPLEMENTATION PLAN
+================================================================================
+
+================================================================================
+  CURRENT STATE: WHAT'S ALREADY BUILT
+================================================================================
+
+Step 1  | Data Ingestion          | data_engine.py                | ~60%
+        | yfinance + CSV cache exists. Missing: real-time tick feed,
+        | timestamp validation, bad-print cleaning.
+
+Step 2  | Volume Profile / RSI    | features.py                   | ~40%
+        | RSI, ATR, SMA exist. Missing: VWAP, Volume Profile (HVN/LVN),
+        | chi-squared statistical tests.
+
+Step 3  | Returns / VaR           | features.py                   | ~30%
+        | Bollinger bands only. Missing: VaR, log-return distribution
+        | fitting, cross-asset correlation matrix.
+
+Step 4  | Monte Carlo             | models.py                     | ~50%
+        | Basic GBM (1000 paths). Missing: Heston stochastic volatility
+        | model, TP/SL probability calculation.
+
+Step 5  | Markov Regime           | models.py                     | ~20%
+        | 10-bar momentum count only. Missing: real transition probability
+        | matrices, regime persistence.
+
+Step 6  | Multi-Alpha Engine      | (missing)                     |   0%
+        | Does not exist yet.
+
+Step 7  | Microstructure/Slippage | backtesting/backtest_engine.py| ~25%
+        | Static slippage in backtest only. Missing: dynamic stop-loss
+        | adjustment, order book imbalance proxy.
+
+Step 8  | Deep Learning (LSTM/MLP)| config/settings.py            | ~10%
+        | MLP config only. No LSTM, no implementation.
+
+Step 9  | Ultra Stacking ML       | config/settings.py            | ~15%
+        | Config for all models exists. No actual stacking ensemble.
+
+Step 10 | Signal Science Engine   | quantum_signals.py            | ~80%
+        | FFT, Hawkes, MaxEnt, HMM all implemented.
+        | Missing: Genetic Optimization only.
+
+Step 11 | Master Meta-Quant       | quant_engine.py               | ~25%
+        | Quantile regression only. Missing: Kelly Criterion, signal
+        | fusion from Steps 1-10, order execution.
+
+Steps   | Dashboard UI            | app.py / app_refactored.py    | ~50%
+12-13   | Chart + signals exist. Missing: PnL heatmap, Sharpe/Sortino
+        | panels, trade alert banner, equity curve chart.
+
+
+================================================================================
+  ARCHITECTURE OVERVIEW
+================================================================================
+
+  [1-Min Tick Feed]  -->  [Technical & Volatility]  -->  [Regime & Monte Carlo]
+   Step 1: Ingestion      Steps 2-3: Profile & VaR      Steps 4-5: Path & Markov
+
+        |
+        v
+
+  [AI Stacking & Signal Engine]  -->  [Master Meta-Execution]  -->  [Live UI]
+   Steps 6-10: ML & FFT & Hawkes      Step 11: Kelly & Order      Steps 12-13
+
+
+================================================================================
+  PHASE 1: SOLIDIFY THE DATA FOUNDATION  (Steps 1-3)
+================================================================================
+
+  Target files: data_engine.py, features.py
+
+  --- Step 1 Gaps ---
+  - Add fetch_intraday_1m() using yfinance "1m" interval (8-day window limit)
+  - Add validate_ohlcv(df):
+      * Drop zero-volume candles
+      * Remove duplicate timestamps
+      * Flag bad prints (price > 3-sigma from rolling mean)
+  - Add latency tagging (timestamp delta check between fetches)
+
+  --- Step 2 Gaps (features.py) ---
+  - Add add_vwap(df):
+      VWAP = sum(Price x Volume) / sum(Volume), reset daily
+  - Add add_volume_profile(df):
+      Bin price into 20 nodes
+      Identify HVN = top 20% by volume (High Volume Nodes)
+      Identify LVN = bottom 20% by volume (Low Volume Nodes)
+  - Add add_rsi_divergence(df):
+      Detect when price makes new high but RSI does not (bearish divergence)
+
+  --- Step 3 Gaps ---
+  - Add compute_var(df, confidence=0.95):
+      Historical VaR from log-returns distribution
+  - Add compute_correlation_matrix(symbols, interval):
+      Cross-asset Pearson / Spearman correlation
+  - Add fit_return_distribution(df):
+      Fit normal + student-t distributions
+      Return skewness, kurtosis, tail risk metrics
+
+
+================================================================================
+  PHASE 2: UPGRADE STOCHASTIC MODELS  (Steps 4-5)
+================================================================================
+
+  Target file: models.py  (or new simulation.py)
+
+  --- Step 4: Enhance Monte Carlo ---
+  - Upgrade run_monte_carlo() to Heston stochastic volatility:
+
+      dS = mu * S * dt  +  sqrt(V) * S * dW_S
+      dV = kappa * (theta - V) * dt  +  xi * sqrt(V) * dW_V
+
+      Parameters:
+        kappa = mean reversion speed of variance
+        theta = long-run variance
+        xi    = volatility of volatility
+        rho   = correlation between dW_S and dW_V
+
+  - Increase default simulation paths to 10,000
+    (100,000 paths is CPU-heavy without GPU acceleration)
+  - Add compute_tp_sl_probability(paths, entry, take_profit, stop_loss):
+      Count % of paths that hit take_profit before stop_loss
+
+  --- Step 5: Real Markov Transition Matrix ---
+  - Replace the simple momentum counter in get_markov_regime() with a
+    proper 3-state transition matrix:
+      State 0: Bull Trend
+      State 1: Bear Trend
+      State 2: Choppy / Range
+
+  - Build transition matrix from rolling return quantiles:
+      P[i][j] = probability of moving from state i to state j
+
+  - Output: transition probabilities + current state (not just a label)
+  - Use hmmlearn library or implement manual Baum-Welch EM algorithm
+
+
+================================================================================
+  PHASE 3: BUILD MISSING SIGNAL ENGINES  (Steps 6-7)
+================================================================================
+
+  New file: alpha_engine.py
+
+  --- Step 6: Multi-Alpha Composite Engine ---
+
+  4 independent alpha signals:
+
+    Alpha 1 - Trend Momentum (weight 0.30):
+      MACD crossover + SMA-20 / SMA-50 alignment
+      Signal = +1 if MACD > Signal AND price > SMA-20 > SMA-50
+
+    Alpha 2 - Mean Reversion (weight 0.20):
+      Z-score of (Close - VWAP) / ATR
+      Signal = +1 if zscore < -1.5 (price below VWAP, expect reversion up)
+
+    Alpha 3 - Volume Spike (weight 0.30):
+      Signal = +1 if Volume > 2x 20-bar rolling average AND price up
+
+    Alpha 4 - Relative Strength (weight 0.20):
+      RSI vs. sector median RSI
+      Signal = +1 if asset RSI > sector_median_rsi + 5
+
+  Composite conviction = weighted_average(alpha_1..4)
+
+  Gate: requires_n_confirms = 2
+    Only generate trade signal if >= 2 of 4 alphas agree
+
+  --- Step 7: Dynamic Stop-Loss & Microstructure ---
+  - Add compute_bid_ask_imbalance(df):
+      Proxy = (High - Close) / ATR  (synthetic order book pressure)
+      High value = selling pressure at ask
+      Low value  = buying pressure at bid
+
+  - Add dynamic_stop_loss(entry_price, atr, regime):
+      Trending regime:  stop = entry - 1.5 * ATR  (tight)
+      Choppy regime:    stop = entry - 2.5 * ATR  (wide)
+      High volatility:  stop = entry - 3.0 * ATR  (very wide)
+
+  - Add cooldown_counter:
+      After a stop-loss hit, suppress new signals for N bars (default N=3)
+      Prevents overtrading during choppy / whipsaw conditions
+
+
+================================================================================
+  PHASE 4: COMPLETE THE ML STACK  (Steps 8-9)
+================================================================================
+
+  New file: ml/stacking_ensemble.py
+
+  --- Step 8: Deep Learning Models ---
+
+  SequenceFeatureBuilder(df, lookback=20):
+    Output shape: (num_samples, 20, num_features)
+    Used as input to LSTM
+
+  LSTMModel architecture:
+    Input  -> LSTM(64 units) -> Dropout(0.2)
+           -> LSTM(32 units) -> Dropout(0.2)
+           -> Dense(16, relu)
+           -> Dense(1, sigmoid)
+    Loss: binary_crossentropy
+    Optimizer: Adam(lr=0.001)
+    Serialize: models/{symbol}_{interval}_lstm.h5
+
+  MLPModel (sklearn MLPClassifier):
+    hidden_layer_sizes = (64, 32)
+    max_iter = 200
+    early_stopping = True
+    random_state = 42
+    Serialize: models/{symbol}_{interval}_mlp.pkl
+
+  --- Step 9: Ultra Stacking Ensemble ---
+
+  Level 0 - Base Learners (train on 70% of data):
+    - XGBoost          (n_estimators=100, max_depth=4, lr=0.05)
+    - LightGBM         (n_estimators=100, max_depth=4, lr=0.05)
+    - RandomForest     (n_estimators=100, max_depth=5)
+    - ExtraTrees       (n_estimators=100, max_depth=5)
+    - MLP              (64-32 architecture, early_stopping=True)
+
+  Level 1 - Meta-Learner:
+    - Logistic Regression trained on out-of-fold predictions from Level 0
+    - Output: single conviction_score in range [0.0, 1.0]
+
+  Cross-validation: TimeSeriesSplit(n_splits=5)
+    (prevents lookahead bias — critical for financial time series)
+
+  Feature set: 190+ features including:
+    - All technical indicators from features.py
+    - VWAP deviation, volume profile nodes
+    - FFT dominant period and spectral energy
+    - Hawkes intensity, HMM state probabilities
+    - MaxEnt entropy score
+    - Quantile regression uncertainty bounds
+
+  Add feature_importance_report() to metrics/feature_importance.py
+
+  --- Step 10: Genetic Optimization (only missing piece) ---
+
+  Add genetic_optimize_indicators(df, param_grid) in quantum_signals.py:
+
+    Use scipy.optimize.differential_evolution to search:
+      RSI period:         range [7, 21]
+      ATR period:         range [7, 21]
+      MACD fast:          range [8, 16]
+      MACD slow:          range [20, 30]
+      BB std multiplier:  range [1.5, 3.0]
+
+    Objective: maximize Sharpe ratio on in-sample backtest
+    Population size: 15, Max iterations: 50
+
+
+================================================================================
+  PHASE 5: MASTER ENGINE + DASHBOARD  (Steps 11-13)
+================================================================================
+
+  Target files: quant_engine.py, app_refactored.py
+  New file: pages/execution_dashboard.py
+
+  --- Step 11: Master Meta-Quant Signal Fusion ---
+
+  fuse_signals(step1..step10 outputs) in quant_engine.py:
+
+    Component weights (sum to 1.0):
+      Data quality score      0.05   (Step 1)
+      Volume profile signal   0.10   (Step 2)
+      VaR / risk score        0.05   (Step 3)
+      Monte Carlo TP prob     0.10   (Step 4)
+      Markov regime score     0.10   (Step 5)
+      Multi-alpha conviction  0.15   (Step 6)
+      Microstructure signal   0.05   (Step 7)
+      LSTM / MLP prediction   0.10   (Step 8)
+      Stacking ensemble score 0.20   (Step 9)
+      Quantum signals score   0.10   (Step 10)
+
+    final_conviction = sum(weight_i * score_i for all i)
+
+  Kelly Criterion position sizing:
+    f* = (p * b - q) / b
+
+    Where:
+      p = historical win rate
+      q = 1 - p  (loss rate)
+      b = avg_win / avg_loss  (reward-to-risk ratio)
+      f* = fraction of capital to risk
+
+    Implementation rules:
+      Use half-Kelly:  position_size = 0.5 * f* * total_capital
+      Hard cap: max 25% of capital in any single trade
+      Min threshold: only trade if f* > 0.02 (avoid tiny edge bets)
+
+  generate_trade_signal(conviction_threshold=0.75):
+    Returns dict:
+      {
+        "action":      "BUY" | "SELL" | "HOLD",
+        "conviction":  float (0.0 to 1.0),
+        "position_sz": float (dollar amount),
+        "entry":       float,
+        "stop_loss":   float,
+        "take_profit": float,
+        "reward_risk": float
+      }
+    Only fires if conviction > threshold AND regime is not CHOPPY
+
+  --- Steps 12-13: Dashboard Upgrades ---
+
+  Tab 1 - Live Chart (existing, keep):
+    Candlestick + indicators + pattern detection
+
+  Tab 2 - NEW: Trade Signal Panel:
+    Alert banner (red/green) when conviction > 0.75:
+      "BUY Signal: BTC-USD @ $105,200 | SL: $103,800 | TP: $108,000"
+    Real-time conviction score gauge (0.0 to 1.0)
+    Component score breakdown (radar chart)
+
+  Tab 3 - NEW: PnL Analytics:
+    PnL heatmap: plotly density_heatmap
+      X-axis: hour of day (0-23)
+      Y-axis: day of week (Mon-Fri)
+      Color: average win rate per time slot
+
+    Sharpe / Sortino / Calmar ratios (from BacktestMetrics)
+    Equity curve chart (load from backtest_results/*.json)
+    Trade distribution histogram (win/loss by size)
+
+  Tab 4 - NEW: Execution Log:
+    Real-time table of generated signals
+    Columns: Timestamp, Symbol, Action, Conviction, Entry, SL, TP, Status
+    Export to CSV button
+
+
+================================================================================
+  BUILD SEQUENCE (SPRINTS)
+================================================================================
+
+  Sprint 1-2 (Foundation):
+    [x] VWAP + Volume Profile        -> features.py
+    [x] VaR + Correlation            -> features.py
+    [x] Data validation              -> data_engine.py
+
+  Sprint 2-4 (Simulation):
+    [ ] Heston Monte Carlo           -> simulation.py (new)
+    [ ] Real Markov Transitions      -> models.py
+
+  Sprint 3-5 (Alphas):
+    [ ] Multi-Alpha Engine           -> alpha_engine.py (new)
+    [ ] Dynamic Stop-Loss            -> alpha_engine.py (new)
+
+  Sprint 5-8 (ML):
+    [ ] Stacking Ensemble            -> ml/stacking_ensemble.py (new)
+    [ ] LSTM / MLP                   -> ml/stacking_ensemble.py (new)
+    [ ] Genetic Optimization         -> quantum_signals.py
+
+  Sprint 8-10 (Execution):
+    [ ] Signal Fusion + Kelly        -> quant_engine.py
+    [ ] Dashboard Upgrades           -> app_refactored.py + pages/
+
+
+================================================================================
+  NEW FILES TO CREATE
+================================================================================
+
+  ml/stacking_ensemble.py         XGBoost+LightGBM+RF+ET+MLP -> meta-learner
+  alpha_engine.py                  4-alpha composite signal + dynamic stops
+  simulation.py                    Heston Monte Carlo + TP/SL probability
+  pages/execution_dashboard.py     PnL heatmap, trade alerts, equity curve
+
+
+================================================================================
+  FILES TO UPGRADE
+================================================================================
+
+  features.py           Add: VWAP, Volume Profile, VaR, return distribution
+  models.py             Add: real Markov transition matrix
+  quant_engine.py       Add: signal fusion, Kelly Criterion
+  quantum_signals.py    Add: genetic optimization (differential_evolution)
+  app_refactored.py     Add: PnL heatmap, Sharpe/Sortino, trade alert banner
+
+
+================================================================================
+  DEPENDENCIES TO ADD (requirements.txt)
+================================================================================
+
+  hmmlearn        - Step 5: proper Hidden Markov Model with Baum-Welch
+  tensorflow      - Step 8: LSTM model  (alternative: torch + pytorch-lightning)
+
+  Already present (verify versions):
+  lightgbm        - Step 9 stacking (already in requirements.txt)
+  scipy           - Heston simulation + genetic optimization (already present)
+  xgboost         - Step 9 base learner (already present)
+  scikit-learn    - Step 9 meta-learner + MLP (already present)
+
+
+================================================================================
+  RECOMMENDED STARTING POINT
+================================================================================
+
+  HIGHEST IMPACT, LOWEST FRICTION:
+
+  1. Phase 3 - Step 6 (Multi-Alpha Engine):
+     Leverages existing data pipeline and features.
+     No new dependencies required.
+     Directly reduces false signals.
+
+  2. Phase 4 - Step 9 (Stacking Ensemble):
+     Builds on existing XGBoost + LightGBM configs.
+     Combines all current models into one conviction score.
+     Most significant ML improvement available.
+
+  Run Phases 1 and 2 in parallel (self-contained modules).
+  Phase 5 (Master Engine + Dashboard) is the final integration step.
+
+================================================================================

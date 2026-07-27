@@ -1,0 +1,787 @@
+2026-07-27 20:51:21,901 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:00:26,323 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:07:22,025 - asyncio - ERROR - [base_events.py:1886] - default_exception_handler() - Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Python314\Lib\asyncio\events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-07-27 23:07:54,451 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:10:12,466 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:10:12,504 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:10:12,505 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:10:12,517 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('CREATE TABLE IF NOT EXISTS "_tz_kv" ("key" VARCHAR(255) NOT NULL PRIMARY KEY, "value" VARCHAR(255)) WITHOUT ROWID', [])
+2026-07-27 23:10:12,518 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:10:12,519 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:10:12,520 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:40:12+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:10:12,521 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:10:12,521 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:10:12,521 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:10:12,521 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174012, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:10:12,521 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:10:12,521 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:10:12,522 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:10:12,522 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:10:12,522 - yfinance - DEBUG - [utils.py:121] - wrapper() -        Entering _load_cookie_curlCffi()
+2026-07-27 23:10:12,528 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('CREATE TABLE IF NOT EXISTS "_cookieschema" ("strategy" VARCHAR(255) NOT NULL PRIMARY KEY, "fetch_date" DATETIME NOT NULL, "cookie_bytes" BLOB NOT NULL) WITHOUT ROWID', [])
+2026-07-27 23:10:12,529 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."strategy", "t1"."fetch_date", "t1"."cookie_bytes" FROM "_cookieschema" AS "t1" WHERE ("t1"."strategy" = ?) LIMIT ? OFFSET ?', ['curlCffi', 1, 0])
+2026-07-27 23:10:12,529 - yfinance - DEBUG - [utils.py:126] - wrapper() -        Exiting _load_cookie_curlCffi()
+2026-07-27 23:10:12,530 - yfinance - DEBUG - [data.py:240] - _get_cookie_basic() - reusing persistent cookie
+2026-07-27 23:10:12,530 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:10:12,530 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:10:12,530 - yfinance - DEBUG - [utils.py:121] - wrapper() -        Entering _get_cookie_basic()
+2026-07-27 23:10:12,530 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:10:12,530 - yfinance - DEBUG - [utils.py:126] - wrapper() -        Exiting _get_cookie_basic()
+2026-07-27 23:10:13,193 - yfinance - DEBUG - [data.py:286] - _get_crumb_basic() - crumb = 'jbur8t/XTKw'
+2026-07-27 23:10:13,193 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:10:13,193 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:10:13,194 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:10:13,452 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:10:13,453 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:10:13,453 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:10:13,458 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:10:13,461 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:10:13,473 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:10:13,489 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:10:13,490 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:10:13,490 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:10:13,528 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:10:13,618 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:10:18,390 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:10:19,331 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:10:24,401 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:10:24,435 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:10:24,437 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:10:24,438 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:10:24,451 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:10:24,452 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:40:24+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:10:24,453 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:10:24,454 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:10:24,454 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:10:24,455 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174024, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:10:24,456 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:10:24,458 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:10:24,459 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:10:24,460 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:10:24,461 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:10:24,462 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:10:24,462 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:10:24,464 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:10:24,464 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:10:24,465 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:10:24,467 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:10:24,721 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:10:24,722 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:10:24,722 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:10:24,728 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:10:24,732 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:10:24,741 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:10:24,757 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:10:24,757 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:10:24,758 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:10:24,787 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:10:24,858 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:10:26,476 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:10:26,742 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:10:30,981 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (5m)
+2026-07-27 23:10:31,045 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:10:31,046 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:10:31,047 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:10:31,050 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:10:31,051 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:40:31+00:00', 'interval': '5m', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:10:31,051 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:10:31,051 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:10:31,051 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174031, 'interval': '5m', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:10:31,052 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:10:31,053 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:10:31,053 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:10:31,053 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:10:31,053 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:10:31,053 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:10:31,359 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:10:31,360 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:10:31,360 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:10:31,365 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 17:40:28
+2026-07-27 23:10:31,384 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 17:40:28+00:00
+2026-07-27 23:10:31,391 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 17:40:28+00:00
+2026-07-27 23:10:31,413 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 17:40:00+00:00
+2026-07-27 23:10:31,413 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:10:31,414 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:10:31,511 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 5109 rows
+2026-07-27 23:10:31,747 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:10:40,062 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_5m
+2026-07-27 23:10:41,038 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:11:04,703 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:11:09,287 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:14:53,763 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:14:56,497 - asyncio - ERROR - [base_events.py:1886] - default_exception_handler() - Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Python314\Lib\asyncio\events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-07-27 23:14:56,636 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:14:56,660 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:14:56,662 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:14:56,663 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:14:56,671 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:14:56,672 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:44:56+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:14:56,673 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:14:56,673 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:14:56,673 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:14:56,673 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174296, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:14:56,674 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:14:56,674 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:14:56,674 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:14:56,674 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:14:56,674 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:14:56,675 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:14:56,675 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:14:56,675 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:14:56,675 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:14:56,675 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:14:56,676 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:14:56,988 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:14:56,989 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:14:56,989 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:14:56,993 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:14:56,996 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:14:57,006 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:14:57,025 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:14:57,026 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:14:57,027 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:14:57,062 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:14:57,169 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:14:58,797 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:14:59,024 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:15:09,165 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:15:09,262 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:16:24,096 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:16:24,119 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:16:24,121 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:16:24,122 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:16:24,132 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:16:24,133 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:46:24+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:16:24,134 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:16:24,134 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:16:24,134 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:16:24,135 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174384, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:16:24,135 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:16:24,135 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:16:24,135 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:16:24,136 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:16:24,136 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:16:24,136 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:16:24,136 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:16:24,137 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:16:24,137 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:16:24,137 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:16:24,137 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:16:24,335 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:16:24,336 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:16:24,336 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:16:24,341 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:16:24,344 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:16:24,365 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:16:24,397 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:16:24,399 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:16:24,399 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:16:24,428 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:16:24,511 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:16:26,590 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:16:26,849 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:16:35,818 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:16:44,571 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:16:44,592 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:16:44,593 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:16:44,593 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:16:44,601 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:16:44,603 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:46:44+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:16:44,603 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:16:44,604 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:16:44,604 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:16:44,604 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174404, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:16:44,604 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:16:44,605 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:16:44,606 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:16:44,607 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:16:44,801 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:16:44,801 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:16:44,802 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:16:44,807 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:16:44,809 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:16:44,821 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:16:44,843 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:16:44,844 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:16:44,844 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:16:44,886 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:16:44,995 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:16:46,510 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:16:46,710 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:17:16,650 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:17:16,674 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:17:16,675 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:17:16,677 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:17:16,687 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:17:16,689 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:47:16+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:17:16,689 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:17:16,690 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:17:16,690 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:17:16,691 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174436, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:17:16,692 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:17:16,692 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:17:16,692 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:17:16,693 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:17:16,693 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:17:16,693 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:17:16,694 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:17:16,694 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:17:16,694 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:17:16,695 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:17:16,695 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:17:16,951 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:17:16,951 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:17:16,952 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:17:16,956 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:17:16,958 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:17:16,967 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:17:16,983 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:17:16,984 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:17:16,984 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:17:17,012 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:17:17,099 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:17:18,672 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:17:18,933 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:21:14,604 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:21:14,631 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:21:14,632 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:21:14,633 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:21:14,638 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:21:14,639 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:51:14+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:21:14,640 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:21:14,640 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:21:14,640 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:21:14,640 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174674, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:21:14,641 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:21:14,641 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:21:14,641 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:21:14,641 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:21:14,642 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:21:14,642 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:21:14,642 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:21:14,642 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:21:14,643 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:21:14,643 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:21:14,644 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:21:14,898 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:21:14,899 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:21:14,899 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:21:14,903 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:21:14,905 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:21:14,915 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:21:14,932 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:21:14,933 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:21:14,933 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:21:14,974 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:21:15,073 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:21:16,887 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:21:17,211 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:22:37,957 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:22:37,979 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:22:37,980 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:22:37,981 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:22:37,986 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:22:37,987 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:52:37+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:22:37,987 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:22:37,988 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:22:37,988 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:22:37,988 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174757, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:22:37,988 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:22:37,988 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:22:37,989 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:22:37,989 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:22:37,989 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:22:37,989 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:22:37,989 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:22:37,990 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:22:37,990 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:22:37,990 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:22:37,990 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:22:38,204 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:22:38,205 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:22:38,205 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:22:38,209 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:22:38,211 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:22:38,220 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:22:38,236 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:22:38,237 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:22:38,237 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:22:38,272 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:22:38,367 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:22:40,029 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:22:40,310 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:23:53,491 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:23:53,513 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:23:53,514 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:23:53,516 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:23:53,521 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:23:53,522 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:53:53+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:23:53,523 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:23:53,523 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:23:53,523 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:23:53,523 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174833, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:23:53,524 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:23:53,524 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:23:53,524 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:23:53,524 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:23:53,524 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:23:53,525 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:23:53,525 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:23:53,525 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:23:53,525 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:23:53,525 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:23:53,526 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:23:53,752 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:23:53,753 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:23:53,753 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:23:53,757 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:23:53,760 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:23:53,770 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:23:53,787 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:23:53,787 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:23:53,788 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:23:53,820 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:23:53,906 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:23:55,534 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:23:55,800 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:24:32,285 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:24:32,307 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:24:32,309 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:24:32,310 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:24:32,317 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:24:32,317 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:54:32+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:24:32,318 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:24:32,318 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:24:32,318 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:24:32,319 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174872, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:24:32,319 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:24:32,319 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:24:32,319 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:24:32,319 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:24:32,320 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:24:32,320 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:24:32,320 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:24:32,320 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:24:32,320 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:24:32,320 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:24:32,321 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:24:32,557 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:24:32,557 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:24:32,557 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:24:32,560 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:24:32,562 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:32,569 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:32,586 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:32,587 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:24:32,587 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:24:32,620 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:24:32,721 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:24:34,342 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:24:34,630 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:24:40,522 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:24:40,546 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:24:40,547 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:24:40,548 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:24:40,553 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:24:40,554 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:54:40+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:24:40,554 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:24:40,555 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:24:40,555 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:24:40,555 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174880, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:24:40,556 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:24:40,556 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:24:40,557 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:24:40,557 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:24:40,557 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:24:40,557 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:24:40,557 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:24:40,558 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:24:40,558 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:24:40,558 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:24:40,558 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:24:40,851 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:24:40,852 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:24:40,852 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:24:40,856 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:24:40,859 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:40,868 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:40,889 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:40,890 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:24:40,890 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:24:40,929 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:24:41,014 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:24:42,846 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:24:43,143 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:24:49,933 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:24:49,956 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:24:49,957 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:24:49,959 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:24:49,964 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:24:49,965 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:54:49+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:24:49,965 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:24:49,965 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:24:49,966 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:24:49,966 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174889, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:24:49,966 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:24:49,967 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:24:49,968 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:24:50,193 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:24:50,193 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:24:50,194 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:24:50,197 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:24:50,199 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:50,206 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:50,224 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:24:50,224 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:24:50,225 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:24:50,254 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:24:50,325 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:24:51,873 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:24:52,139 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:26:09,362 - asyncio - ERROR - [base_events.py:1886] - default_exception_handler() - Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\Python314\Lib\asyncio\events.py", line 94, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-07-27 23:26:09,702 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:26:09,724 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:26:09,725 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:26:09,727 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:26:09,733 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:26:09,734 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:56:09+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:26:09,734 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:26:09,735 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:26:09,735 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:26:09,735 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174969, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:26:09,735 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:26:09,736 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:26:09,736 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:26:09,736 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:26:09,736 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:26:09,737 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:26:09,737 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:26:09,737 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:26:09,737 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:26:09,737 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:26:09,738 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:26:10,004 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:26:10,005 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:26:10,006 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:26:10,010 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:26:10,012 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:10,021 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:10,038 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:10,039 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:26:10,039 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:26:10,078 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:26:10,178 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:26:12,017 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:26:12,335 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:26:17,783 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:26:17,810 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:26:17,812 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:26:17,813 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:26:17,819 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:26:17,820 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:56:17+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:26:17,820 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:26:17,821 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:26:17,821 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:26:17,821 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174977, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:26:17,821 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:26:17,822 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:26:17,822 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:26:17,822 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:26:17,822 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:26:17,822 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:26:17,823 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:26:17,823 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:26:17,823 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:26:17,823 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:26:17,823 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:26:18,094 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:26:18,095 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:26:18,095 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:26:18,099 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:26:18,101 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:18,109 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:18,126 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:18,127 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:26:18,128 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:26:18,170 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:26:18,272 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:26:20,323 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:26:20,635 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:26:33,951 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:26:33,975 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:26:33,977 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:26:33,978 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:26:33,982 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:26:33,983 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:56:33+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:26:33,983 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:26:33,984 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:26:33,984 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:26:33,984 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785174993, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:26:33,984 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:26:33,985 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:26:33,985 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:26:33,985 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:26:33,985 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:26:33,985 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:26:33,986 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:26:33,986 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:26:33,986 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:26:33,986 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:26:33,986 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:26:34,246 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:26:34,246 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:26:34,247 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:26:34,249 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:26:34,251 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:34,258 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:34,269 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:26:34,270 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:26:34,270 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:26:34,297 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:26:34,367 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:26:35,974 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:26:36,184 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:27:00,621 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:27:00,646 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:27:00,647 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:27:00,648 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:27:00,653 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:27:00,654 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:57:00+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:27:00,654 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:27:00,654 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:27:00,655 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:27:00,655 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785175020, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:27:00,655 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:27:00,655 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:27:00,656 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:27:00,656 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:27:00,656 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:27:00,656 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:27:00,656 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:27:00,657 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:27:00,657 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:27:00,657 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:27:00,657 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:27:01,046 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:27:01,047 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:27:01,047 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:27:01,050 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:27:01,052 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:27:01,059 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:27:01,073 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:27:01,074 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:27:01,074 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:27:01,099 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:27:01,176 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:27:01,767 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:27:01,796 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:27:01,799 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:27:01,801 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:27:01,808 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:27:01,808 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:57:01+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:27:01,809 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:27:01,809 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:27:01,810 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:27:01,810 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785175021, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:27:01,810 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:27:01,811 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:27:01,811 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:27:01,811 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:27:01,811 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:27:01,811 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:27:01,812 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:27:01,812 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:27:01,812 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:27:01,812 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:27:01,814 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:27:02,079 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:27:02,080 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:27:02,081 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:27:02,084 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:27:02,086 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:27:02,093 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:27:02,114 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:27:02,114 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:27:02,114 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:27:02,146 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:27:02,235 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:27:04,083 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:27:04,376 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:29:45,977 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:29:46,000 - data_engine - INFO - [data_engine.py:44] - fetch_data() - [BTC-USD] Found cached data. Fetching new data since 2026-07-25...
+2026-07-27 23:29:46,001 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:29:46,002 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:29:46,008 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:29:46,008 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 17:59:46+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:29:46,009 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:29:46,009 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:29:46,009 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:29:46,009 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785175186, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:29:46,010 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:29:46,010 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:29:46,010 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:29:46,011 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:29:46,011 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:29:46,011 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:29:46,012 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:29:46,012 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:29:46,012 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:29:46,012 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:29:46,013 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:29:46,220 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:29:46,221 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:29:46,221 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:29:46,225 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:29:46,228 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:29:46,237 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:29:46,254 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:29:46,255 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:29:46,255 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:29:46,292 - data_engine - DEBUG - [data_engine.py:59] - fetch_data() - Updated cache for BTC-USD: 731 rows
+2026-07-27 23:29:46,384 - features - INFO - [features.py:93] - add_features() - Feature engineering completed: 33 features generated
+2026-07-27 23:29:48,036 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:29:48,340 - portfolio - DEBUG - [portfolio.py:21] - load_portfolio() - Loaded portfolio: 1 positions
+2026-07-27 23:30:39,111 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:30:40,562 - __main__ - INFO - [app_refactored.py:85] - load_and_process_data() - Loading data for BTC-USD (1d)
+2026-07-27 23:30:40,593 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:30:40,605 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('CREATE TABLE IF NOT EXISTS "_tz_kv" ("key" VARCHAR(255) NOT NULL PRIMARY KEY, "value" VARCHAR(255)) WITHOUT ROWID', [])
+2026-07-27 23:30:40,606 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:30:40,607 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:30:40,608 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 18:00:40+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:30:40,608 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:30:40,608 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:30:40,608 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:30:40,608 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785175240, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:30:40,609 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:30:40,609 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:30:40,609 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:30:40,609 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:30:40,609 - yfinance - DEBUG - [utils.py:121] - wrapper() -        Entering _load_cookie_curlCffi()
+2026-07-27 23:30:40,617 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('CREATE TABLE IF NOT EXISTS "_cookieschema" ("strategy" VARCHAR(255) NOT NULL PRIMARY KEY, "fetch_date" DATETIME NOT NULL, "cookie_bytes" BLOB NOT NULL) WITHOUT ROWID', [])
+2026-07-27 23:30:40,618 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."strategy", "t1"."fetch_date", "t1"."cookie_bytes" FROM "_cookieschema" AS "t1" WHERE ("t1"."strategy" = ?) LIMIT ? OFFSET ?', ['curlCffi', 1, 0])
+2026-07-27 23:30:40,620 - yfinance - DEBUG - [utils.py:126] - wrapper() -        Exiting _load_cookie_curlCffi()
+2026-07-27 23:30:40,620 - yfinance - DEBUG - [data.py:240] - _get_cookie_basic() - reusing persistent cookie
+2026-07-27 23:30:40,620 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:30:40,620 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:30:40,621 - yfinance - DEBUG - [utils.py:121] - wrapper() -        Entering _get_cookie_basic()
+2026-07-27 23:30:40,621 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:30:40,621 - yfinance - DEBUG - [utils.py:126] - wrapper() -        Exiting _get_cookie_basic()
+2026-07-27 23:30:41,098 - yfinance - DEBUG - [data.py:286] - _get_crumb_basic() - crumb = 'jbur8t/XTKw'
+2026-07-27 23:30:41,098 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:30:41,099 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:30:41,099 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:30:41,366 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:30:41,366 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:30:41,366 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:30:41,370 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:30:41,373 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:30:41,382 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:30:41,398 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:30:41,399 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:30:41,400 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:30:41,741 - __main__ - INFO - [app_refactored.py:107] - load_and_process_data() - Data loading complete for BTC-USD_1d
+2026-07-27 23:38:32,678 - utils.logging_setup - INFO - [logging_setup.py:15] - setup_logging() - Logging initialized successfully
+2026-07-27 23:42:46,051 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:42:46,052 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:42:46,060 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:42:46,061 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 18:12:46+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:42:46,061 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:42:46,061 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:42:46,062 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:42:46,062 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785175966, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:42:46,062 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:42:46,062 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:42:46,063 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:42:46,063 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:42:46,063 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:42:46,063 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:42:46,063 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:42:46,064 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:42:46,064 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:42:46,064 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:42:46,064 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:42:46,327 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:42:46,327 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:42:46,328 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:42:46,332 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:42:46,334 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:42:46,344 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:42:46,362 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:42:46,363 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:42:46,363 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
+2026-07-27 23:42:51,828 - yfinance - DEBUG - [utils.py:121] - wrapper() - Entering history()
+2026-07-27 23:42:51,829 - peewee - DEBUG - [peewee.py:3775] - execute_sql() - ('SELECT "t1"."key", "t1"."value" FROM "_tz_kv" AS "t1" WHERE ("t1"."key" = ?) LIMIT ? OFFSET ?', ['BTC-USD', 1, 0])
+2026-07-27 23:42:51,840 - yfinance - DEBUG - [utils.py:121] - wrapper() -  Entering history()
+2026-07-27 23:42:51,841 - yfinance - DEBUG - [history.py:205] - history() - BTC-USD: Yahoo GET parameters: {'period1': '2026-07-25 00:00:00+00:00', 'period2': '2026-07-27 18:12:51+00:00', 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:42:51,842 - yfinance - DEBUG - [utils.py:121] - wrapper() -   Entering get()
+2026-07-27 23:42:51,843 - yfinance - DEBUG - [utils.py:121] - wrapper() -    Entering _make_request()
+2026-07-27 23:42:51,843 - yfinance - DEBUG - [data.py:445] - _make_request() - url=https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD
+2026-07-27 23:42:51,844 - yfinance - DEBUG - [data.py:446] - _make_request() - params={'period1': 1784937600, 'period2': 1785175971, 'interval': '1d', 'includePrePost': False, 'events': 'div,splits,capitalGains'}
+2026-07-27 23:42:51,845 - yfinance - DEBUG - [utils.py:121] - wrapper() -     Entering _get_cookie_and_crumb()
+2026-07-27 23:42:51,845 - yfinance - DEBUG - [data.py:401] - _get_cookie_and_crumb() - cookie_mode = 'basic'
+2026-07-27 23:42:51,846 - yfinance - DEBUG - [utils.py:121] - wrapper() -      Entering _get_cookie_and_crumb_basic()
+2026-07-27 23:42:51,846 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_cookie_basic()
+2026-07-27 23:42:51,847 - yfinance - DEBUG - [data.py:237] - _get_cookie_basic() - reusing cookie
+2026-07-27 23:42:51,848 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_cookie_basic()
+2026-07-27 23:42:51,848 - yfinance - DEBUG - [utils.py:121] - wrapper() -       Entering _get_crumb_basic()
+2026-07-27 23:42:51,849 - yfinance - DEBUG - [data.py:261] - _get_crumb_basic() - reusing crumb
+2026-07-27 23:42:51,849 - yfinance - DEBUG - [utils.py:126] - wrapper() -       Exiting _get_crumb_basic()
+2026-07-27 23:42:51,850 - yfinance - DEBUG - [utils.py:126] - wrapper() -      Exiting _get_cookie_and_crumb_basic()
+2026-07-27 23:42:51,851 - yfinance - DEBUG - [utils.py:126] - wrapper() -     Exiting _get_cookie_and_crumb()
+2026-07-27 23:42:52,075 - yfinance - DEBUG - [data.py:484] - _make_request() - response code=200
+2026-07-27 23:42:52,076 - yfinance - DEBUG - [utils.py:126] - wrapper() -    Exiting _make_request()
+2026-07-27 23:42:52,076 - yfinance - DEBUG - [utils.py:126] - wrapper() -   Exiting get()
+2026-07-27 23:42:52,081 - yfinance - DEBUG - [history.py:327] - history() - BTC-USD: yfinance received OHLC data: 2026-07-25 00:00:00 -> 2026-07-27 00:00:00
+2026-07-27 23:42:52,084 - yfinance - DEBUG - [history.py:359] - history() - BTC-USD: OHLC after cleaning: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:42:52,093 - yfinance - DEBUG - [history.py:454] - history() - BTC-USD: OHLC after combining events: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:42:52,111 - yfinance - DEBUG - [history.py:541] - history() - BTC-USD: yfinance returning OHLC: 2026-07-25 00:00:00+00:00 -> 2026-07-27 00:00:00+00:00
+2026-07-27 23:42:52,112 - yfinance - DEBUG - [utils.py:126] - wrapper() -  Exiting history()
+2026-07-27 23:42:52,112 - yfinance - DEBUG - [utils.py:126] - wrapper() - Exiting history()
