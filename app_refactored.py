@@ -80,6 +80,14 @@ def render_sidebar() -> tuple:
 # DATA & MODEL PROCESSING
 # ============================================================================
 
+from alpha_engine import MultiAlphaEngine, compute_bid_ask_imbalance
+from simulation import run_heston_monte_carlo
+from ml.stacking_ensemble import UltraStackingEnsemble
+from quant_engine import generate_master_trade_signal, fuse_signals
+from pages.execution_dashboard import render_execution_dashboard
+from quantum_signals import compute_fft_cycles, compute_hawkes_excitation, compute_maxent_distribution, compute_hmm_regime
+from features import add_volume_profile, compute_var
+
 def load_and_process_data(symbol: str, interval: str, period: str, force_retrain: bool) -> dict:
     """Load data, engineer features, and train model."""
     logger.info(f"Loading data for {symbol} ({interval})")
@@ -91,18 +99,60 @@ def load_and_process_data(symbol: str, interval: str, period: str, force_retrain
         st.error(f"Failed to fetch data for {symbol}")
         st.stop()
     
-    with st.spinner("Engineering technical indicators..."):
+    with st.spinner("Engineering technical indicators & volume profiles..."):
         df_feat = add_features(df)
     
     if df_feat is None or len(df_feat) < 40:
         st.error("Insufficient data for model training")
         st.stop()
     
-    with st.spinner("Training AI ensemble models..."):
+    with st.spinner("Training AI ensemble & Stacking models..."):
         model = TradingModel(symbol, interval)
         model.train_or_load(df_feat, force_retrain=force_retrain)
         prediction = model.predict_next(df_feat)
         regime = get_markov_regime(df_feat)
+
+        # Stacking Ensemble
+        stacking = UltraStackingEnsemble(symbol, interval)
+        stacking.train_or_load(df_feat, force_retrain=force_retrain)
+        stacking_res = stacking.predict_next(df_feat)
+
+        # Multi-Alpha Engine
+        alpha_eng = MultiAlphaEngine(requires_n_confirms=2)
+        alpha_res = alpha_eng.compute_alphas(df_feat)
+
+        # Heston Monte Carlo
+        heston_res = run_heston_monte_carlo(df_feat, days=20, simulations=2000)
+
+        # Volume Profile & VaR
+        vol_prof = add_volume_profile(df_feat)
+        var_res = compute_var(df_feat)
+
+        # Quantum signals
+        fft_res = compute_fft_cycles(df_feat)
+        hawkes_res = compute_hawkes_excitation(df_feat)
+        maxent_res = compute_maxent_distribution(df_feat)
+
+        # 10 Component Scores for Fusion Engine
+        component_scores = {
+            "data_quality": 0.95,
+            "volume_profile": 0.65 if 'Close' in df_feat.columns and df_feat['Close'].iloc[-1] > vol_prof.get('poc', 0) else 0.45,
+            "var_risk": float(np.clip(1.0 - var_res.get('historical_var', 0.05) * 5.0, 0.1, 0.9)),
+            "monte_carlo": 0.60 if heston_res and heston_res['mean_expected'] > df_feat['Close'].iloc[-1] else 0.40,
+            "markov_regime": regime.get('markov_score', 0.5),
+            "multi_alpha": alpha_res.get('composite_conviction', 0.5),
+            "microstructure": float(np.clip(1.0 - compute_bid_ask_imbalance(df_feat) * 0.5, 0.1, 0.9)),
+            "deep_learning": prediction.get('prob_up', 0.5),
+            "stacking_ensemble": stacking_res.get('stacking_conviction', 0.5),
+            "quantum_signals": float(np.mean([
+                fft_res.get('spectral_score', 0.5),
+                hawkes_res.get('hawkes_score', 0.5),
+                maxent_res.get('maxent_score', 0.5)
+            ]))
+        }
+
+        # Master Trade Signal with Kelly position sizing
+        master_trade_signal = generate_master_trade_signal(df_feat, component_scores)
     
     logger.info(f"Data loading complete for {symbol}_{interval}")
     
@@ -111,8 +161,16 @@ def load_and_process_data(symbol: str, interval: str, period: str, force_retrain
         "df_feat": df_feat,
         "model": model,
         "prediction": prediction,
-        "regime": regime
+        "regime": regime,
+        "stacking_res": stacking_res,
+        "alpha_res": alpha_res,
+        "heston_res": heston_res,
+        "vol_prof": vol_prof,
+        "var_res": var_res,
+        "component_scores": component_scores,
+        "master_trade_signal": master_trade_signal
     }
+
 
 
 # ============================================================================
@@ -454,7 +512,7 @@ def main():
     data = st.session_state['data']
     
     # Main tabs
-    tabs = ["🏠 Dashboard", "🤖 Model Analytics", "💼 Portfolio"]
+    tabs = ["🏠 Dashboard", "⚡ Master Execution", "🤖 Model Analytics", "💼 Portfolio"]
     if show_backtest:
         tabs.append("📈 Backtesting")
     if show_metrics:
@@ -466,20 +524,24 @@ def main():
         render_main_dashboard(data, symbol, interval)
     
     with selected_tab[1]:
+        render_execution_dashboard(data, symbol, interval)
+
+    with selected_tab[2]:
         render_model_analytics(data, symbol, interval)
     
-    with selected_tab[2]:
+    with selected_tab[3]:
         render_portfolio_tab(symbol)
     
     if show_backtest:
-        with selected_tab[3]:
+        with selected_tab[4]:
             render_backtesting_tab(data, symbol, interval)
     
     if show_metrics:
-        tab_idx = 4 if show_backtest else 3
+        tab_idx = 5 if show_backtest else 4
         with selected_tab[tab_idx]:
             render_feature_importance_tab(data, symbol, interval)
 
 
 if __name__ == "__main__":
     main()
+

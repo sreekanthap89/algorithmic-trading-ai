@@ -178,3 +178,114 @@ def calculate_rolling_ic(predictions_hist: list, actuals_hist: list) -> float:
         ic = 0.05
 
     return float(np.clip(ic, -1.0, 1.0))
+
+def fuse_signals(component_scores: dict) -> float:
+    """
+    Step 11 Master Signal Fusion across Steps 1 to 10:
+    Component weights (sum to 1.0):
+      data_quality:       0.05
+      volume_profile:     0.10
+      var_risk:           0.05
+      monte_carlo:        0.10
+      markov_regime:      0.10
+      multi_alpha:        0.15
+      microstructure:     0.05
+      deep_learning:      0.10
+      stacking_ensemble:  0.20
+      quantum_signals:    0.10
+    """
+    weights = {
+        "data_quality": 0.05,
+        "volume_profile": 0.10,
+        "var_risk": 0.05,
+        "monte_carlo": 0.10,
+        "markov_regime": 0.10,
+        "multi_alpha": 0.15,
+        "microstructure": 0.05,
+        "deep_learning": 0.10,
+        "stacking_ensemble": 0.20,
+        "quantum_signals": 0.10
+    }
+
+    fused_conviction = sum(weights[k] * component_scores.get(k, 0.5) for k in weights)
+    return float(np.clip(fused_conviction, 0.0, 1.0))
+
+def kelly_position_sizing(win_rate: float, reward_risk_ratio: float, total_capital: float = 10000.0) -> dict:
+    """
+    Calculates position sizing via Half-Kelly Criterion:
+      f* = (p * b - q) / b
+    where p = win_rate, q = 1 - p, b = reward_risk_ratio.
+    Rules:
+      - Half-Kelly: position_size = 0.5 * f* * total_capital
+      - Hard cap: max 25% of capital
+      - Min threshold: only trade if f* > 0.02
+    """
+    p = float(np.clip(win_rate, 0.01, 0.99))
+    q = 1.0 - p
+    b = float(max(0.1, reward_risk_ratio))
+
+    full_kelly = (p * b - q) / b
+    
+    if full_kelly <= 0.02:
+        return {"fraction": 0.0, "position_usd": 0.0, "kelly_status": "BELOW THRESHOLD (NO EDGE)"}
+
+    half_kelly = 0.5 * full_kelly
+    capped_fraction = float(np.clip(half_kelly, 0.0, 0.25))
+    position_usd = round(capped_fraction * total_capital, 2)
+
+    return {
+        "full_kelly": round(full_kelly, 4),
+        "half_kelly": round(half_kelly, 4),
+        "capped_fraction": round(capped_fraction, 4),
+        "position_usd": position_usd,
+        "kelly_status": "OPTIMAL POSITION ALLOCATED"
+    }
+
+def generate_master_trade_signal(
+    df: pd.DataFrame, 
+    component_scores: dict, 
+    conviction_threshold: float = 0.75, 
+    total_capital: float = 10000.0
+) -> dict:
+    """
+    Generates a master trade decision combining signal fusion, dynamic stops, and Kelly sizing.
+    """
+    if df is None or len(df) == 0:
+        return {"action": "HOLD", "conviction": 0.5, "reason": "No data"}
+
+    last_price = float(df['Close'].iloc[-1])
+    atr = float(df['ATR'].iloc[-1]) if 'ATR' in df.columns else (last_price * 0.02)
+
+    conviction = fuse_signals(component_scores)
+    
+    # Calculate entry, SL, TP
+    reward_risk_ratio = 2.0
+    stop_dist = 2.0 * atr
+    tp_dist = reward_risk_ratio * stop_dist
+
+    if conviction >= conviction_threshold:
+        action = "BUY"
+        stop_loss = round(last_price - stop_dist, 2)
+        take_profit = round(last_price + tp_dist, 2)
+    elif conviction <= (1.0 - conviction_threshold):
+        action = "SELL"
+        stop_loss = round(last_price + stop_dist, 2)
+        take_profit = round(last_price - tp_dist, 2)
+    else:
+        action = "HOLD"
+        stop_loss = round(last_price - stop_dist, 2)
+        take_profit = round(last_price + tp_dist, 2)
+
+    sizing = kelly_position_sizing(conviction, reward_risk_ratio, total_capital)
+
+    return {
+        "action": action,
+        "conviction": round(conviction, 4),
+        "entry": round(last_price, 2),
+        "stop_loss": stop_loss,
+        "take_profit": take_profit,
+        "reward_risk": reward_risk_ratio,
+        "position_size_usd": sizing["position_usd"],
+        "kelly_details": sizing
+    }
+

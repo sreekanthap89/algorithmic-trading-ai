@@ -189,3 +189,71 @@ def compute_hmm_regime(df: pd.DataFrame) -> dict:
         "hmm_score": float(hmm_score),
         "state_probabilities": [float(p_bull), float(p_bear), float(p_chop)]
     }
+
+def genetic_optimize_indicators(df: pd.DataFrame) -> dict:
+    """
+    Uses Differential Evolution (Genetic Optimization) to search for optimal
+    technical indicator parameters (RSI, ATR, MACD fast/slow, BB dev) that maximize
+    in-sample Sharpe Ratio.
+    """
+    if len(df) < 50:
+        return {"optimized": False, "best_params": {}, "best_sharpe": 0.0}
+
+    from scipy.optimize import differential_evolution
+    import ta
+
+    # Parameter bounds:
+    # 0: rsi_period [7, 21]
+    # 1: atr_period [7, 21]
+    # 2: macd_fast  [8, 16]
+    # 3: macd_slow  [20, 30]
+    # 4: bb_std     [1.5, 3.0]
+    bounds = [(7, 21), (7, 21), (8, 16), (20, 30), (1.5, 3.0)]
+
+    def objective(params):
+        rsi_p, atr_p, macd_f, macd_s, bb_std = params
+        rsi_p, atr_p, macd_f, macd_s = int(rsi_p), int(atr_p), int(macd_f), int(macd_s)
+
+        if macd_f >= macd_s:
+            return 999.0  # Invalid parameter penalty
+
+        try:
+            close = df['Close']
+            rsi = ta.momentum.RSIIndicator(close, window=rsi_p).rsi()
+            macd = ta.trend.MACD(close, window_slow=macd_s, window_fast=macd_f).macd()
+            macd_sig = ta.trend.MACD(close, window_slow=macd_s, window_fast=macd_f).macd_signal()
+
+            signals = np.where((rsi > 50) & (macd > macd_sig), 1.0, -1.0)
+            returns = df['Return'].fillna(0).values
+
+            strat_returns = signals[:-1] * returns[1:]
+            mean_ret = np.mean(strat_returns)
+            std_ret = np.std(strat_returns)
+
+            if std_ret == 0:
+                return 999.0
+
+            sharpe = (mean_ret / std_ret) * np.sqrt(252)
+            return -sharpe  # Minimize negative Sharpe ratio
+        except Exception:
+            return 999.0
+
+    try:
+        result = differential_evolution(objective, bounds, popsize=10, maxiter=20, seed=42)
+        best_p = result.x
+        best_sharpe = float(-result.fun) if result.fun < 500 else 0.0
+
+        return {
+            "optimized": True,
+            "best_params": {
+                "rsi_period": int(best_p[0]),
+                "atr_period": int(best_p[1]),
+                "macd_fast": int(best_p[2]),
+                "macd_slow": int(best_p[3]),
+                "bb_std": round(float(best_p[4]), 2)
+            },
+            "best_sharpe": round(best_sharpe, 4)
+        }
+    except Exception as e:
+        return {"optimized": False, "error": str(e), "best_sharpe": 0.0}
+
