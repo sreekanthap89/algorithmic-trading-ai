@@ -28,3 +28,4 @@ Traceback (most recent call last):
     self._sock.shutdown(socket.SHUT_RDWR)
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
 ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-10-04 01:51:09,914 - yfinance - ERROR - [history.py:372] - history() - $BTC-USD: 1m data not available for startTime=1790208000 and endTime=1791058868. Only 8 days worth of 1m granularity data are allowed to be fetched per request.

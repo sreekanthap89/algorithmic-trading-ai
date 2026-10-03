@@ -2,6 +2,21 @@ import pandas as pd
 import ta
 import numpy as np
 
+# Canonical list of features actually computed below and consumed by the model.
+# Kept in sync so training and inference use identical columns.
+LIVE_FEATURE_COLS = [
+    'RSI', 'MACD', 'MACD_Diff', 'MACD_Signal',
+    'BB_High', 'BB_Low', 'BB_Mid', 'BB_Width', 'BB_pctB',
+    'ATR', 'ATR_Pct',
+    'SMA_20', 'SMA_50', 'SMA_200', 'EMA_12', 'EMA_26',
+    'Dist_SMA20', 'Dist_SMA50', 'Dist_EMA12',
+    'Return', 'Log_Return',
+    'Return_Vol_10', 'Return_Skew_20', 'Return_Kurt_20', 'Z_Score_Return',
+    'Streak_Length', 'VWAP_Dev', 'RSI_Divergence',
+    'Hawkes_Intensity', 'Pair_RSI_MACD_Lift',
+]
+
+
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds technical indicators to the dataframe.
@@ -17,42 +32,122 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     if 'Close' not in df.columns or 'High' not in df.columns or 'Low' not in df.columns or 'Volume' not in df.columns:
         return df
 
-    # Momentum Indicator: RSI
-    df['RSI'] = ta.momentum.RSIIndicator(close=df['Close'], window=14).rsi()
-    
-    # Trend Indicator: MACD
-    macd = ta.trend.MACD(close=df['Close'])
+    close = df['Close']
+
+    # --- Momentum ---
+    df['RSI'] = ta.momentum.RSIIndicator(close=close, window=14).rsi()
+
+    # --- Trend: MACD (with histogram) ---
+    macd = ta.trend.MACD(close=close, window_fast=12, window_slow=26, window_sign=9)
     df['MACD'] = macd.macd()
     df['MACD_Signal'] = macd.macd_signal()
-    
-    # Volatility Indicator: Bollinger Bands
-    bollinger = ta.volatility.BollingerBands(close=df['Close'], window=20, window_dev=2)
+    df['MACD_Diff'] = macd.macd_diff()   # MACD histogram
+
+    # --- Trend: EMAs (MACD components) ---
+    df['EMA_12'] = ta.trend.EMAIndicator(close=close, window=12).ema_indicator()
+    df['EMA_26'] = ta.trend.EMAIndicator(close=close, window=26).ema_indicator()
+
+    # --- Volatility: Bollinger Bands ---
+    bollinger = ta.volatility.BollingerBands(close=close, window=20, window_dev=2)
     df['BB_High'] = bollinger.bollinger_hband()
     df['BB_Low'] = bollinger.bollinger_lband()
     df['BB_Mid'] = bollinger.bollinger_mavg()
-    
-    # Average True Range (ATR) for volatility
-    df['ATR'] = ta.volatility.AverageTrueRange(high=df['High'], low=df['Low'], close=df['Close'], window=14).average_true_range()
-    
-    # Moving Averages
-    df['SMA_20'] = ta.trend.SMAIndicator(close=df['Close'], window=20).sma_indicator()
-    df['SMA_50'] = ta.trend.SMAIndicator(close=df['Close'], window=50).sma_indicator()
-    
-    # Log Returns
-    df['Return'] = df['Close'].pct_change()
-    df['Log_Return'] = np.log(df['Close'] / df['Close'].shift(1))
+    _bb_width = (df['BB_High'] - df['BB_Low']) / df['BB_Mid'].replace(0, 1e-9)
+    df['BB_Width'] = _bb_width
+    # %B: position within the bands (1 = upper, 0 = lower)
+    _bb_range = (df['BB_High'] - df['BB_Low']).replace(0, 1e-9)
+    df['BB_pctB'] = (close - df['BB_Low']) / _bb_range
 
-    # Add VWAP
+    # --- Volatility: ATR (absolute and normalized) ---
+    df['ATR'] = ta.volatility.AverageTrueRange(
+        high=df['High'], low=df['Low'], close=close, window=14).average_true_range()
+    df['ATR_Pct'] = df['ATR'] / close.replace(0, 1e-9)
+
+    # --- Trend: moving averages ---
+    df['SMA_20'] = ta.trend.SMAIndicator(close=close, window=20).sma_indicator()
+    df['SMA_50'] = ta.trend.SMAIndicator(close=close, window=50).sma_indicator()
+    if len(df) >= 200:
+        df['SMA_200'] = ta.trend.SMAIndicator(close=close, window=200).sma_indicator()
+    else:
+        df['SMA_200'] = np.nan
+
+    # --- Distance-to-trend (trend-strength / mean-reversion features) ---
+    df['Dist_SMA20'] = (close - df['SMA_20']) / df['SMA_20'].replace(0, 1e-9)
+    df['Dist_SMA50'] = (close - df['SMA_50']) / df['SMA_50'].replace(0, 1e-9)
+    df['Dist_EMA12'] = (close - df['EMA_12']) / df['EMA_12'].replace(0, 1e-9)
+
+    # --- Returns & log returns ---
+    df['Return'] = close.pct_change()
+    df['Log_Return'] = np.log(close / close.shift(1))
+
+    # --- Return distribution statistics (rolling) ---
+    _ret = df['Return']
+    df['Return_Vol_10'] = _ret.rolling(10).std()
+    df['Return_Skew_20'] = _ret.rolling(20).skew()
+    df['Return_Kurt_20'] = _ret.rolling(20).kurt()
+    _rollmean = _ret.rolling(20).mean()
+    _rollstd = _ret.rolling(20).std().replace(0, 1e-9)
+    df['Z_Score_Return'] = (_ret - _rollmean) / _rollstd
+
+    # --- Consecutive-direction streak length (momentum persistence) ---
+    _direction = np.sign(_ret.fillna(0.0))
+    _streak = pd.Series(0, index=df.index, dtype='int64')
+    for i in range(1, len(_direction)):
+        if _direction.iloc[i] != 0 and _direction.iloc[i] == _direction.iloc[i - 1]:
+            _streak.iloc[i] = abs(_streak.iloc[i - 1]) + 1
+        else:
+            _streak.iloc[i] = 1 if _direction.iloc[i] != 0 else 0
+    df['Streak_Length'] = _streak
+
+    # --- Cross-feature: RSI/MACD z-score lift (confluence) ---
+    _rsi_z = (df['RSI'] - df['RSI'].rolling(20).mean()) / df['RSI'].rolling(20).std().replace(0, 1e-9)
+    _macd_z = (df['MACD'] - df['MACD'].rolling(20).mean()) / df['MACD'].rolling(20).std().replace(0, 1e-9)
+    df['Pair_RSI_MACD_Lift'] = _rsi_z * _macd_z
+
+    # --- Hawkes self-exciting intensity (approx. via EW of positive returns) ---
+    df['Hawkes_Intensity'] = _hawkes_intensity(_ret, alpha=0.4, beta=0.2)
+
+    # --- VWAP + RSI divergence (already-implemented helpers) ---
     df = add_vwap(df)
-    
-    # Add RSI Divergence
     df = add_rsi_divergence(df)
 
-    # Target: 1 if next candle's close is higher than current candle's close, else 0
-    # (We shift(-1) so that today's row contains the target for tomorrow)
-    df['Target'] = (df['Close'].shift(-1) > df['Close']).astype(int)
+    # Fill any leftover NaN/inf so downstream training can drop rows cleanly
+    for col in LIVE_FEATURE_COLS:
+        if col in df.columns:
+            df[col] = df[col].replace([np.inf, -np.inf], np.nan)
+
+    # Target: direction of the next close, gated by an ATR threshold so the model
+    # only learns economically meaningful moves. Neutral bars (|move| < 0.5*ATR)
+    # are left NaN and excluded by dropna, giving a clean up-vs-down signal that
+    # matches the BUY/SELL prob_up thresholds used downstream.
+    _atr_ref = df['ATR'].replace(0, 1e-9)
+    _next_move = close.shift(-1) - close
+    _thr = 0.5 * _atr_ref
+    df['Target'] = np.float64(np.nan)
+    df.loc[_next_move > _thr, 'Target'] = 1.0
+    df.loc[_next_move < -_thr, 'Target'] = 0.0
 
     return df
+
+
+def _hawkes_intensity(returns: pd.Series, alpha: float = 0.4, beta: float = 0.2,
+                      decay_per_bar: float = 0.5) -> pd.Series:
+    """Simple self-exciting Hawkes-style intensity: an exponential-weighted rate
+    of *up-ticks* that excites intensity now. Returns a normalized 0..1 series."""
+    excitation = np.maximum(returns, 0.0)  # only up-moves excite
+    intensity = pd.Series(np.zeros(len(excitation)), index=excitation.index)
+    lam = 0.0
+    for i in range(len(excitation)):
+        lam = lam * decay_per_bar + excitation.iloc[i]
+        intensity.iloc[i] = alpha * excitation.iloc[i] + beta * lam
+    out = intensity
+    span = out.max() - out.min()
+    if span and span > 0:
+        out = (out - out.min()) / span
+    else:
+        out = pd.Series(0.5, index=excitation.index)
+    return out
+
 
 def add_vwap(df: pd.DataFrame) -> pd.DataFrame:
     """

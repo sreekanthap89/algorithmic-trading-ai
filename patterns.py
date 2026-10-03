@@ -400,15 +400,25 @@ def draw_bearish_bat(fig: go.Figure, p: Dict, has_sub: bool) -> None:
         name=f"XD = {r['XD_XA']:.3f}  (0.886)", showlegend=False,
     ), has_sub)
 
-    # Stop-loss and target horizontal levels
+    # Stop-loss and target horizontal levels (extended to latest candle)
+    end_x = D[0]
+    try:
+        if len(fig.data) > 0 and hasattr(fig.data[0], 'x') and len(fig.data[0].x) > 0:
+            end_x = fig.data[0].x[-1]
+    except Exception:
+        pass
+
     for lbl, y_val, col in [
         ("Bat Stop-Loss", stop, "#EF5350"),
         ("Bat Target",    tgt,  "#26A69A"),
     ]:
         _tr(fig, go.Scatter(
-            x=[X[0], D[0]], y=[y_val, y_val],
-            mode="lines", line=dict(color=col, width=1.2, dash="dash"),
-            name=lbl, showlegend=False,
+            x=[X[0], end_x], y=[y_val, y_val],
+            mode="lines+text", line=dict(color=col, width=1.5, dash="dash"),
+            text=["", f"  {lbl}: ${y_val:,.2f}"],
+            textposition="middle right",
+            textfont=dict(color=col, size=11),
+            name=lbl, showlegend=True,
         ), has_sub)
 
     # XABCD point labels
@@ -607,40 +617,53 @@ def detect_and_draw_patterns(
     show_cup:    bool = False,
     show_bat:    bool = False,
     show_wedge:  bool = False,
-) -> None:
+) -> dict:
     """
     Detect all enabled chart patterns in *df* and draw them on *fig*.
     Each detector is wrapped in try/except so a single failure never
     crashes the chart.
+    Returns a dictionary of detected patterns for trade execution planning.
     """
+    # 🛡️ Robustness: Sanitization pass to handle NaNs in price data before detection
+    df_clean = df.copy()
+    df_clean[['High', 'Low', 'Close']] = df_clean[['High', 'Low', 'Close']].ffill().bfill()
+
+    detected = {}
+
     if show_wolfe:
         try:
-            pat = detect_wolfe_wave(df)
+            pat = detect_wolfe_wave(df_clean)
             if pat:
                 draw_wolfe_wave(fig, pat, has_sub)
+                detected["wolfe_wave"] = pat
         except Exception:
             pass
 
     if show_cup:
         try:
-            pat = detect_cup_handle(df)
+            pat = detect_cup_handle(df_clean)
             if pat:
                 draw_cup_handle(fig, pat, has_sub)
+                detected["cup_handle"] = pat
         except Exception:
             pass
 
     if show_bat:
         try:
-            pat = detect_bearish_bat(df)
+            pat = detect_bearish_bat(df_clean)
             if pat:
                 draw_bearish_bat(fig, pat, has_sub)
+                detected["bearish_bat"] = pat
         except Exception:
             pass
 
     if show_wedge:
         try:
-            pat = detect_falling_wedge(df)
+            pat = detect_falling_wedge(df_clean)
             if pat:
                 draw_falling_wedge(fig, pat, has_sub)
+                detected["falling_wedge"] = pat
         except Exception:
             pass
+
+    return detected

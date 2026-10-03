@@ -86,13 +86,17 @@ SIGNAL_THRESHOLDS = {
 }
 
 # ==================== FEATURE CONFIGURATION ====================
+# Mirrors features.LIVE_FEATURE_COLS so training and inference agree.
 FEATURE_COLS = [
-    'RSI', 'MACD', 'MACD_Signal', 'MACD_Diff',
-    'BB_High', 'BB_Low', 'BB_Mid', 'BB_Width',
-    'ATR', 'SMA_20', 'SMA_50', 'EMA_12', 'EMA_26',
-    'Dist_SMA20', 'Dist_SMA50', 'Return', 'Log_Return',
-    'Return_Vol_10', 'Return_Skew_20', 'Return_Kurt_20',
-    'Z_Score_Return', 'Streak_Length', 'Hawkes_Intensity', 'Pair_RSI_MACD_Lift'
+    'RSI', 'MACD', 'MACD_Diff', 'MACD_Signal',
+    'BB_High', 'BB_Low', 'BB_Mid', 'BB_Width', 'BB_pctB',
+    'ATR', 'ATR_Pct',
+    'SMA_20', 'SMA_50', 'SMA_200', 'EMA_12', 'EMA_26',
+    'Dist_SMA20', 'Dist_SMA50', 'Dist_EMA12',
+    'Return', 'Log_Return',
+    'Return_Vol_10', 'Return_Skew_20', 'Return_Kurt_20', 'Z_Score_Return',
+    'Streak_Length', 'VWAP_Dev', 'RSI_Divergence',
+    'Hawkes_Intensity', 'Pair_RSI_MACD_Lift',
 ]
 
 # ==================== QUANTUM SIGNALS CONFIGURATION ====================

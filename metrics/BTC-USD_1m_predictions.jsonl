@@ -1,0 +1,5 @@
+{"timestamp": "2026-10-04T04:02:46.495220", "signal": "SELL (DOWN)", "prob_up": 0.40228354930877686, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:03:06.895766", "signal": "SELL (DOWN)", "prob_up": 0.40228354930877686, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:03:06.896260", "signal": "SELL (DOWN)", "prob_up": 0.39501017332077026, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:08:05.682398", "signal": "SELL (DOWN)", "prob_up": 0.39501017332077026, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:08:05.682734", "signal": "SELL (DOWN)", "prob_up": 0.39162808656692505, "actual_result": null, "metadata": {}}
