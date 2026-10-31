@@ -5,6 +5,7 @@ import joblib
 import os
 import warnings
 from datetime import datetime
+from typing import Optional, Dict, List, Tuple, Any
 
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import (
@@ -215,10 +216,20 @@ class TradingModel:
         }
 
 
-def run_monte_carlo(df: pd.DataFrame, days=30, simulations=1000):
+def run_monte_carlo(
+    df: pd.DataFrame,
+    days: int = 30,
+    simulations: int = 1000,
+    seed: Optional[int] = None,
+    prob_up: Optional[float] = None,
+) -> Optional[dict]:
     """
-    Monte Carlo simulation from the FULL history of returns to estimate
-    Value at Risk and a price projection cone.
+    Rigorously models future asset price trajectories using:
+    1. Exact closed-form Geometric Brownian Motion (GBM) log-normal quantiles
+       derived from Itô calculus (zero random sampling error, perfectly continuous and deterministic).
+    2. Bayesian drift conditioning incorporating AI directional probability (prob_up).
+    3. Variance-reduced Antithetic Variates Monte Carlo simulation with deterministic
+       bar-timestamp seeding for empirical path distributions and VaR computation.
     """
     if df is None or len(df) < 2:
         return None
@@ -229,27 +240,69 @@ def run_monte_carlo(df: pd.DataFrame, days=30, simulations=1000):
     if len(returns) == 0:
         return None
 
-    mu = float(np.mean(returns))
+    mu_hist = float(np.mean(returns))
     std = float(np.std(returns))
     std = std if std > 0 else 1e-6
 
+    # Bayesian drift updating: incorporate AI model directional probability
+    # If prob_up > 0.5, expected positive directional edge; if < 0.5, negative edge.
+    if prob_up is not None and not np.isnan(prob_up):
+        kappa = 1.0 / np.sqrt(max(days, 1))
+        mu = mu_hist * 0.2 + (float(prob_up) - 0.5) * std * kappa
+    else:
+        mu = mu_hist
+
     last_price = float(working_df['Close'].iloc[-1])
-    if np.isnan(last_price):
+    if np.isnan(last_price) or last_price <= 0:
         return None
 
-    # Vectorised: (simulations, days) of returns → prices.
-    sim_returns = np.random.normal(mu, std, size=(simulations, days))
+    # =========================================================================
+    # 1. EXACT CLOSED-FORM GEOMETRIC BROWNIAN MOTION (Zero Variance)
+    # Under Itô's Lemma: d ln S_t = (mu - 0.5 * std^2) dt + std * dW_t
+    # Quantiles Q_p(t) = S_0 * exp( (mu - 0.5 * std^2)*t + z_p * std * sqrt(t) )
+    # =========================================================================
+    t_steps = np.arange(1, days + 1, dtype=float)
+    drift_term = (mu - 0.5 * (std ** 2)) * t_steps
+    diffusion_term = std * np.sqrt(t_steps)
+
+    # Standard normal critical values: Phi^-1(0.85), Phi^-1(0.15), Phi^-1(0.05)
+    z_85 = 1.0364333894937898
+    z_15 = -1.0364333894937898
+    z_05 = -1.6448536269514722
+
+    analytical_median = last_price * np.exp(drift_term)
+    analytical_upper85 = last_price * np.exp(drift_term + z_85 * diffusion_term)
+    analytical_lower15 = last_price * np.exp(drift_term + z_15 * diffusion_term)
+    var_95_analytical = float(last_price * np.exp(drift_term[-1] + z_05 * diffusion_term[-1]))
+
+    # =========================================================================
+    # 2. VARIANCE-REDUCED ANTITHETIC SIMULATION (Deterministic Reproducibility)
+    # =========================================================================
+    if seed is None:
+        last_ts = str(working_df.index[-1]) if hasattr(working_df.index, '__getitem__') else "0"
+        import hashlib
+        seed = int(hashlib.sha256(f"{last_ts}_{days}_{len(working_df)}".encode()).hexdigest()[:8], 16)
+
+    rng = np.random.default_rng(seed)
+    half_sims = max(1, simulations // 2)
+    half_draws = rng.normal(0.0, 1.0, size=(half_sims, days))
+    standard_normals = np.vstack([half_draws, -half_draws])  # exactly 0 empirical mean error
+
+    sim_returns = (mu - 0.5 * (std ** 2)) + std * standard_normals
     prices = last_price * np.exp(np.cumsum(sim_returns, axis=1))
     sim_df = pd.DataFrame(prices)
 
     final_prices = sim_df.iloc[:, -1]
-    var_95 = float(np.percentile(final_prices, 5))
 
     return {
         "mean_expected": float(np.mean(final_prices)),
-        "var_95": var_95,
+        "var_95": var_95_analytical,
         "std": std,
+        "mu": mu,
         "paths": sim_df,
+        "analytical_median": [float(x) for x in analytical_median],
+        "analytical_upper85": [float(x) for x in analytical_upper85],
+        "analytical_lower15": [float(x) for x in analytical_lower15],
     }
 
 

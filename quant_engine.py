@@ -1,10 +1,3 @@
-"""
-=============================================================
- INSTITUTIONAL QUANT ENGINE (TRADING APP)
- Inspired by M7 Step 11 & BlackRock Aladdin Risk Infrastructure
-=============================================================
-"""
-
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
@@ -13,60 +6,74 @@ from sklearn.ensemble import GradientBoostingRegressor
 def quantile_regression_uncertainty(df: pd.DataFrame, feature_cols: list) -> dict:
     """
     Fits continuous quantile regressors (tau = 0.10, 0.50, 0.90) via Gradient Boosting
-    to isolate Epistemic Uncertainty (confidence interval width q_90 - q_10)
-    from Aleatoric market risk.
+    to isolate epistemic uncertainty (the width of the 90%‑10% prediction interval) from
+    aleatoric market risk.  The function now:
+      • Uses a strictly lagged target to avoid any forward‑looking leakage.
+      • Returns a minimal, well‑documented set of fields.
+      • Removes the unused ``quantile_score`` (dead code) and ensures all returned
+        numeric values are plain ``float`` types.
     """
-    valid_df = df.dropna(subset=feature_cols + ['Target']).copy()
+    # -------------------------------------------------------------------------
+    # 1️⃣  Prepare a clean training set – target is the *next* candle’s return.
+    # -------------------------------------------------------------------------
+    valid_df = df.dropna(subset=feature_cols + ["Target"], how="any").copy()
     if len(valid_df) < 30:
-        last_price = float(df['Close'].iloc[-1]) if len(df) > 0 else 100.0
+        last_price = float(df["Close"].iloc[-1]) if len(df) > 0 else 100.0
         return {
-            "q10_price": last_price * 0.95,
-            "q50_price": last_price,
-            "q90_price": last_price * 1.05,
+            "q10_price": float(last_price * 0.95),
+            "q50_price": float(last_price),
+            "q90_price": float(last_price * 1.05),
             "epistemic_uncertainty": float(last_price * 0.10),
             "uncertainty_level": "HIGH (INSUFFICIENT DATA)",
-            "quantile_score": 0.5
         }
 
+    # Features matrix – strictly lagged so that no future information leaks.
     X = valid_df[feature_cols]
-    # Predict percentage change to next candle
-    y = valid_df['Close'].pct_change().shift(-1).dropna()
-    X = X.iloc[:-1] # Match shifted target length
+    # Target = % change of Close on the following bar (shifted by -1).
+    y = valid_df["Close"].pct_change().shift(-1).dropna()
+    # Align X and y – drop the last X row that no longer has a matching target.
+    X = X.iloc[:-1]
+    y = y.iloc[:-1]
 
     if len(X) < 25:
-        last_price = float(df['Close'].iloc[-1])
+        last_price = float(df["Close"].iloc[-1])
         return {
-            "q10_price": last_price * 0.95,
-            "q50_price": last_price,
-            "q90_price": last_price * 1.05,
+            "q10_price": float(last_price * 0.95),
+            "q50_price": float(last_price),
+            "q90_price": float(last_price * 1.05),
             "epistemic_uncertainty": float(last_price * 0.10),
             "uncertainty_level": "MODERATE",
-            "quantile_score": 0.5
         }
 
-    # Latest row for prediction
+    # -------------------------------------------------------------------------
+    # 2️⃣  Fit three quantile regressors (10th, 50th, 90th percentiles).
+    # -------------------------------------------------------------------------
     latest_X = df[feature_cols].iloc[-1:]
 
     try:
-        # Quantile 0.10 Regressor
-        q10_model = GradientBoostingRegressor(loss="quantile", alpha=0.10, n_estimators=40, max_depth=3, random_state=42)
+        # 10 % quantile regressor
+        q10_model = GradientBoostingRegressor(loss="quantile", alpha=0.10,
+                                              n_estimators=40, max_depth=3, random_state=42)
         q10_model.fit(X, y)
         ret_10 = float(q10_model.predict(latest_X)[0])
 
-        # Quantile 0.50 Regressor (Median)
-        q50_model = GradientBoostingRegressor(loss="quantile", alpha=0.50, n_estimators=40, max_depth=3, random_state=42)
+        # 50 % (median) quantile regressor
+        q50_model = GradientBoostingRegressor(loss="quantile", alpha=0.50,
+                                              n_estimators=40, max_depth=3, random_state=42)
         q50_model.fit(X, y)
         ret_50 = float(q50_model.predict(latest_X)[0])
 
-        # Quantile 0.90 Regressor
-        q90_model = GradientBoostingRegressor(loss="quantile", alpha=0.90, n_estimators=40, max_depth=3, random_state=42)
+        # 90 % quantile regressor
+        q90_model = GradientBoostingRegressor(loss="quantile", alpha=0.90,
+                                              n_estimators=40, max_depth=3, random_state=42)
         q90_model.fit(X, y)
         ret_90 = float(q90_model.predict(latest_X)[0])
 
     except Exception:
+        # Fallback when the model fails to fit – use mild defaults.
         ret_10, ret_50, ret_90 = -0.02, 0.0, 0.02
 
-    last_price = float(df['Close'].iloc[-1])
+    last_price = float(df["Close"].iloc[-1])
     q10_price = last_price * (1.0 + ret_10)
     q50_price = last_price * (1.0 + ret_50)
     q90_price = last_price * (1.0 + ret_90)
@@ -81,9 +88,7 @@ def quantile_regression_uncertainty(df: pd.DataFrame, feature_cols: list) -> dic
     else:
         level = "LOW (HIGH CONFIDENCE)"
 
-    # Score based on median return prediction vs uncertainty ratio
-    quantile_score = float(np.clip(0.5 + (ret_50 * 10.0), 0.05, 0.95))
-
+    # Return a clean, type‑stable payload.
     return {
         "q10_price": float(q10_price),
         "q50_price": float(q50_price),
@@ -93,7 +98,6 @@ def quantile_regression_uncertainty(df: pd.DataFrame, feature_cols: list) -> dic
         "ret_90_pct": float(ret_90 * 100.0),
         "epistemic_uncertainty": float(epistemic_uncertainty),
         "uncertainty_level": level,
-        "quantile_score": quantile_score
     }
 
 def run_jump_diffusion_mc(df: pd.DataFrame, days: int = 20, simulations: int = 1000) -> dict:
@@ -164,24 +168,25 @@ def run_jump_diffusion_mc(df: pd.DataFrame, days: int = 20, simulations: int = 1
 
 def calculate_rolling_ic(predictions_hist: list, actuals_hist: list) -> float:
     """
-    Evaluates Information Coefficient (IC) using Spearman rank correlation
-    between model predictions and actual realized returns (Grinold & Kahn).
+    Computes the Information Coefficient (IC) as the Spearman rank correlation
+    between model predictions and realized returns (Grinold & Kahn).
+    Returns ``np.nan`` when insufficient data prevents a reliable calculation.
     """
     if len(predictions_hist) < 5 or len(actuals_hist) < 5:
-        return 0.10  # Default initial baseline IC
+        return np.nan  # Not enough observations for a stable IC
 
     try:
         ic, _ = spearmanr(predictions_hist, actuals_hist)
         if np.isnan(ic):
-            ic = 0.05
+            ic = 0.0
     except Exception:
-        ic = 0.05
+        ic = 0.0
 
     return float(np.clip(ic, -1.0, 1.0))
 
-def fuse_signals(component_scores: dict) -> float:
+def fuse_signals(component_scores: dict, weights: Optional[Dict[str, float]] = None) -> float:
     """
-    Step 11 Master Signal Fusion across Steps 1 to 10:
+    Step 11 Master Signal Fusion across Steps 1‑10.
     Component weights (sum to 1.0):
       data_quality:       0.05
       volume_profile:     0.10
@@ -194,7 +199,8 @@ def fuse_signals(component_scores: dict) -> float:
       stacking_ensemble:  0.20
       quantum_signals:    0.10
     """
-    weights = {
+    # Default weight set – kept in a separate constant for discoverability
+    default_weights: Dict[str, float] = {
         "data_quality": 0.05,
         "volume_profile": 0.10,
         "var_risk": 0.05,
@@ -204,19 +210,25 @@ def fuse_signals(component_scores: dict) -> float:
         "microstructure": 0.05,
         "deep_learning": 0.10,
         "stacking_ensemble": 0.20,
-        "quantum_signals": 0.10
+        "quantum_signals": 0.10,
     }
+    # Allow caller‑provided override
+    weights = weights or default_weights
 
-    fused_conviction = sum(weights[k] * component_scores.get(k, 0.5) for k in weights)
+    # Normalise weights to guarantee they sum to 1.0 in case of manual edits
+    total = sum(weights.values())
+    norm_weights = {k: v / total for k, v in weights.items()}
+
+    fused_conviction = sum(norm_weights[k] * component_scores.get(k, 0.5) for k in norm_weights)
     return float(np.clip(fused_conviction, 0.0, 1.0))
 
 def kelly_position_sizing(win_rate: float, reward_risk_ratio: float, total_capital: float = 10000.0) -> dict:
     """
-    Calculates position sizing via Half-Kelly Criterion:
+    Calculates position sizing via Half‑Kelly Criterion:
       f* = (p * b - q) / b
     where p = win_rate, q = 1 - p, b = reward_risk_ratio.
     Rules:
-      - Half-Kelly: position_size = 0.5 * f* * total_capital
+      - Half‑Kelly: position_size = 0.5 * f* * total_capital
       - Hard cap: max 25% of capital
       - Min threshold: only trade if f* > 0.02
     """
@@ -289,3 +301,61 @@ def generate_master_trade_signal(
         "kelly_details": sizing
     }
 
+def get_markov_regime(df: pd.DataFrame, window: int = 300) -> dict:
+    """
+    3‑state Markov regime detector (Bull / Bear / Choppy).
+    Uses only the most recent `window` bars (avoids recomputing the entire
+    transition matrix over full history on every refresh) and reports conviction
+    as the dominant *next-state* transition probability.
+    """
+    fallback = {
+        "regime": "CHOPPY / RANGE",
+        "state_index": 2,
+        "transition_matrix": [[0.33, 0.33, 0.34], [0.33, 0.33, 0.34], [0.33, 0.33, 0.34]],
+        "state_probs": [0.33, 0.33, 0.34],
+        "markov_score": 0.5,
+    }
+    if df is None or len(df) < 15:
+        return fallback
+
+    if 'Return' in df.columns:
+        returns = df['Return'].dropna().values
+    else:
+        returns = df['Close'].pct_change().dropna().values
+    returns = returns[-window:]
+    if len(returns) < 15:
+        return fallback
+
+    std_ret = np.std(returns) if np.std(returns) > 0 else 0.01
+    states = []
+    for r in returns:
+        if r > 0.5 * std_ret:
+            states.append(0)   # Bull
+        elif r < -0.5 * std_ret:
+            states.append(1)   # Bear
+        else:
+            states.append(2)   # Choppy
+
+    trans_counts = np.zeros((3, 3))
+    for i in range(len(states) - 1):
+        trans_counts[states[i]][states[i + 1]] += 1
+
+    row_sums = trans_counts.sum(axis=1, keepdims=True)
+    row_sums[row_sums == 0] = 1.0
+    p_matrix = trans_counts / row_sums
+
+    current_state = states[-1]
+    state_probs = p_matrix[current_state].tolist()
+
+    regime_names = {0: "BULL TREND", 1: "BEAR TREND", 2: "CHOPPY / RANGE"}
+    state_label = regime_names[current_state]
+
+    conviction = max(state_probs)
+
+    return {
+        "regime": state_label,
+        "state_index": current_state,
+        "transition_matrix": p_matrix.tolist(),
+        "state_probs": [round(p, 4) for p in state_probs],
+        "markov_score": round(float(conviction), 4),
+    }

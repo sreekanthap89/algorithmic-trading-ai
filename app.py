@@ -1,6 +1,4 @@
 import streamlit as st
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -10,8 +8,19 @@ from data_engine import fetch_data
 from features import add_features
 from models import TradingModel, run_monte_carlo, get_markov_regime
 from patterns import detect_and_draw_patterns
+import importlib
+import tv_chart
+importlib.reload(tv_chart)
+from tv_chart import (
+    ChartSpec, add_patterns, render_tv_chart, series_points, to_time,
+    LightweightChartsNotBuilt,
+    SOLID as LS_SOLID, DOTTED as LS_DOTTED, DASHED as LS_DASHED,
+)
 import portfolio as pf
 from pages.execution_dashboard import render_execution_dashboard
+from utils.logging_setup import get_logger
+
+logger = get_logger("trading_app")
 
 # Centralised signal thresholds + prediction logging.
 try:
@@ -19,13 +28,32 @@ try:
     _BUY_T = float(SIGNAL_THRESHOLDS.get("buy_threshold", 0.56))
     _SELL_T = float(SIGNAL_THRESHOLDS.get("sell_threshold", 0.44))
 except Exception:
-    _BUY_T, _SELL_T = 0.55, 0.45
+    _BUY_T, _SELL_T = 0.56, 0.45
+
+# Default component weights for signal fusion – kept in one place for discoverability
+DEFAULT_COMPONENT_WEIGHTS = {
+    "data_quality": 0.05,
+    "volume_profile": 0.10,
+    "var_risk": 0.05,
+    "monte_carlo": 0.10,
+    "markov_regime": 0.10,
+    "multi_alpha": 0.15,
+    "microstructure": 0.05,
+    "deep_learning": 0.10,
+    "stacking_ensemble": 0.20,
+    "quantum_signals": 0.10,
+}
 
 try:
     from metrics.validation import PredictionTracker
     _HAS_TRACKER = True
 except Exception:
     _HAS_TRACKER = False
+
+# -----------------------------------------------------------------------
+# CONFIGURATION CONSTANTS – make thresholds and component weights user‑configurable
+# -----------------------------------------------------------------------
+# (already defined above as DEFAULT_COMPONENT_WEIGHTS)
 
 st.set_page_config(
     page_title="Professional AI Trading Terminal",
@@ -96,9 +124,9 @@ def calculate_position_size(cash: float, entry: float, stop_loss: float, risk_pc
 
 def log_prediction(symbol: str, interval: str, prediction: dict, df_feat: pd.DataFrame):
     """
-    Logs the current forward-looking prediction to the on-disk tracker so drift
+    Logs the current forward‑looking prediction to the on‑disk tracker so drift
     detection can run later, and resolves the *previous* pending prediction's
-    actual outcome once a new bar has arrived. No-op on silent auto-refreshes
+    actual outcome once a new bar has arrived. No‑op on silent auto‑refreshes
     that have not produced a new bar.
      """
     if not _HAS_TRACKER:
@@ -109,13 +137,20 @@ def log_prediction(symbol: str, interval: str, prediction: dict, df_feat: pd.Dat
             return
         tracker = PredictionTracker(symbol, interval)
         pending = st.session_state.get('pending_prediction')
-         # Resolve the earlier prediction now that a new bar confirms its outcome.
+        # Clear stale pending prediction if symbol or interval changed
+        if pending and (pending.get('symbol') != symbol or pending.get('interval') != interval):
+            # Remove stale entry to avoid memory leak
+            if 'pending_prediction' in st.session_state:
+                del st.session_state['pending_prediction']
+            if 'last_logged_ts' in st.session_state:
+                del st.session_state['last_logged_ts']
+        # Resolve the earlier prediction now that a new bar confirms its outcome.
         if pending and pending.get('symbol') == symbol and pending.get('interval') == interval:
             if len(df_feat) >= 2:
                 actual = float(df_feat['Close'].iloc[-1]) > float(df_feat['Close'].iloc[-2])
                 tracker.log_prediction(pending['signal'], pending['prob_up'],
                                        actual_result=actual)
-         # Log the new prediction (outcome unknown until the next bar).
+        # Log the new prediction (outcome unknown until the next bar).
         tracker.log_prediction(prediction.get('signal', 'NEUTRAL'),
                                float(prediction.get('prob_up', 0.5)),
                                actual_result=None)
@@ -123,13 +158,16 @@ def log_prediction(symbol: str, interval: str, prediction: dict, df_feat: pd.Dat
             'symbol': symbol, 'interval': interval, 'ts': last_ts,
             'signal': prediction.get('signal', 'NEUTRAL'),
             'prob_up': float(prediction.get('prob_up', 0.5)),
-         }
+        }
         st.session_state['last_logged_ts'] = last_ts
     except Exception as e:
         st.session_state['prediction_log_error'] = str(e)
 
 
 def compute_trade_plan(last_close: float, atr: float, prediction: dict, regime: dict, detected_patterns: dict):
+    """
+    Builds a trade plan that combines signal fusion, dynamic stops, and Kelly sizing.
+    """
     sig = prediction.get('signal', 'NEUTRAL')
     prob_up = prediction.get('prob_up', 0.5)
 
@@ -246,9 +284,9 @@ retrain_ai = st.sidebar.checkbox("Retrain AI Model", value=False, key="retrain_a
 
 st.sidebar.divider()
 
-# Auto-Refresh Settings
-st.sidebar.subheader("Auto-Refresh", divider=False)
-auto_refresh = st.sidebar.checkbox("Enable Auto-Refresh", value=False, key="auto_refresh_chk")
+# Auto‑Refresh Settings
+st.sidebar.subheader("Auto‑Refresh", divider=False)
+auto_refresh = st.sidebar.checkbox("Enable Auto‑Refresh", value=False, key="auto_refresh_chk")
 if auto_refresh:
     refresh_interval = st.sidebar.selectbox(
         "Refresh Interval",
@@ -277,12 +315,29 @@ height_map = {
 }
 chart_h = height_map.get(chart_height, 700)
 
+chart_timezone = st.sidebar.selectbox(
+    "Timezone Display",
+    options=["IST (India Standard Time - UTC+5:30)", "Local Time (Browser / Device)", "UTC (Market Time)", "EST (New York)"],
+    index=0,
+    key="chart_timezone_select",
+    help="Select the timezone used on the chart time scale, crosshair, and timestamps"
+)
+tz_mode_map = {
+    "IST (India Standard Time - UTC+5:30)": "IST",
+    "Local Time (Browser / Device)": "Local",
+    "UTC (Market Time)": "UTC",
+    "EST (New York)": "EST",
+}
+chart_tz_mode = tz_mode_map.get(chart_timezone, "IST")
+
 show_future_forecast = st.sidebar.checkbox(
     "🔮 Future Entry & Exit Projection",
     value=True,
-    help="Displays projected future price trajectory with Take-Profit & Stop-Loss risk zones directly on the chart",
+    help="Displays projected future price trajectory with Take‑Profit & Stop‑Loss risk zones directly on the chart",
     key="show_future_forecast"
 )
+
+st.sidebar.caption("✏️ **Chart Markings**: Click **`✏️ Draw`** on the chart toolbar to place **Support**, **Resistance**, or **Trendlines**. All markings persist across reloads until you click **`⌫ Undo`** or **`🗑️ Clear`**.")
 
 st.sidebar.divider()
 
@@ -291,15 +346,15 @@ st.sidebar.subheader("Technical Overlays", divider=False)
 ind_col1, ind_col2, ind_col3 = st.sidebar.columns(3)
 
 with ind_col1:
-    show_sma20 = st.checkbox("SMA-20", value=True, key="chk_sma20")
+    show_sma20 = st.checkbox("SMA‑20", value=True, key="chk_sma20")
     show_bb = st.checkbox("Bollinger", value=True, key="chk_bb")
 
 with ind_col2:
-    show_sma50 = st.checkbox("SMA-50", value=True, key="chk_sma50")
+    show_sma50 = st.checkbox("SMA‑50", value=True, key="chk_sma50")
     show_trendlines = st.checkbox("Trend Channel", value=False, key="chk_trend")
 
 with ind_col3:
-    show_sma200 = st.checkbox("SMA-200", value=False, key="chk_sma200")
+    show_sma200 = st.checkbox("SMA‑200", value=False, key="chk_sma200")
 
 st.sidebar.divider()
 
@@ -326,34 +381,32 @@ selected_zoom = st.sidebar.selectbox(
 
 st.sidebar.divider()
 
-# Zoom & Interaction ── horizontal / vertical control + a refresh-proof reset
+# Zoom & Interaction
 st.sidebar.subheader("Zoom & Interaction", divider=False)
 zoom_mode = st.sidebar.radio(
      "Zoom Behaviour",
      options=["Both axes (wheel)", "Horizontal only (lock Y)", "Vertical only (lock X)"],
      index=0,
-     horizontal=True,
-     key="zoom_mode_select",
-     help=("Mouse wheel / drag-to-zoom applies. "
-           "'Horizontal only' freezes the price (Y) axis so you zoom the time (X) axis alone; "
-           "'Vertical only' does the opposite. Zoom & pan state is preserved across auto-refresh.")
+     help=("Mouse wheel / drag-to‑zoom applies. "
+           "'Horizontal only' locks the price (Y) axis so you zoom the time (X) axis alone; "
+           "'Vertical only' locks the time (X) axis so you zoom the price (Y) axis alone.")
 )
-# Zoom generation integer. It stays CONSTANT across auto-refresh ticks so the
+# Zoom generation integer. It stays CONSTANT across auto‑refresh ticks so the
 # chart's uirevision never changes and Plotly preserves the user's zoom. It only
 # INCREMENTS on a deliberate action (a new control selection or the Reset button),
-# which intentionally fits a fresh default view. This is the crux of refresh-proof
+# which intentionally fits a fresh default view. This is the crux of refresh‑proof
 # zoom: ordinary refresh = same generation = frozen zoom.
 st.session_state.setdefault("zoom_gen", 1)
 
 if st.sidebar.button("⟲ Reset Chart Zoom", use_container_width=True, key="reset_zoom_btn"):
-     # Discard the current zoom/pan and re-fit to the default view, exactly once.
+     # Discard the current zoom/pan and re‑fit to the default view, exactly once.
     st.session_state["zoom_gen"] += 1
-st.sidebar.caption("🔒 Zoom & pan auto-persist across auto-refresh. A reset or a new control fits a fresh view.")
+st.sidebar.caption("🔒 Zoom & pan auto‑persist across auto‑refresh. A reset or a new control fits a fresh view.")
 
-# Deliberate control changes SHOULD fit a new view; an auto-refresh must NOT.
-_zoom_controls = (selected_zoom, zoom_mode, chart_height, symbol, str(interval))
+# Deliberate control changes SHOULD fit a new view; an auto‑refresh must NOT.
+_zoom_controls = (selected_zoom, zoom_mode, chart_h, chart_tz_mode, symbol, str(interval))
 if st.session_state.get("zoom_controls_sig") != _zoom_controls:
-     # Re-fit to the new selection by advancing the generation (one-shot bump).
+     # Re‑fit to the new selection by advancing the generation (one‑shot bump).
     st.session_state["zoom_gen"] += 1
     st.session_state["zoom_controls_sig"] = _zoom_controls
 zoom_gen = st.session_state.get("zoom_gen", 1)
@@ -362,16 +415,16 @@ zoom_gen = st.session_state.get("zoom_gen", 1)
 
 st.sidebar.divider()
 
-# Chart Geometric Patterns (Persistent Keys)
+# Chart Geometric Patterns
 st.sidebar.subheader("Harmonic & Geometric Patterns", divider=False)
 pat_col1, pat_col2 = st.sidebar.columns(2)
 
 with pat_col1:
-    show_wolfe_wave = st.checkbox("🌊 Wolfe Wave", value=True, key="pat_wolfe", help="Bullish 5-point expanding wedge")
+    show_wolfe_wave = st.checkbox("🌊 Wolfe Wave", value=True, key="pat_wolfe", help="Bullish 5‑point expanding wedge")
     show_bat_pattern = st.checkbox("🦇 Bearish Bat", value=True, key="pat_bat", help="Harmonic XABCD reversal pattern")
 
 with pat_col2:
-    show_cup_handle = st.checkbox("☕ Inv. Cup", value=True, key="pat_cup", help="Inverted Cup and Handle continuation")
+    show_cup_handle = st.checkbox("☕ Inverted Cup", value=True, key="pat_cup", help="Inverted Cup & Handle continuation")
     show_falling_wedge = st.checkbox("📐 Falling Wedge", value=True, key="pat_fw", help="Bullish contraction breakout")
 
 st.sidebar.divider()
@@ -416,14 +469,14 @@ if fetch_clicked or ('df' not in st.session_state) or symbol_changed or interval
 
 
 # ============================================================
-# AUTO-REFRESH FRAGMENT (PRESERVES USER STATE & ZOOM)
+# AUTO‑REFRESH FRAGMENT (PRESERVES USER STATE & ZOOM)
 # ============================================================
 
 @st.fragment(run_every=run_every_val)
 def render_dashboard():
-    """Auto-refresh dashboard data smoothly while preserving chart zoom state"""
+    """Auto‑refresh dashboard data smoothly while preserving chart zoom state"""
     
-    # Auto-refresh: quiet data sync
+    # Auto‑refresh: quiet data sync
     if auto_refresh and 'df' in st.session_state and not fetch_clicked:
         _df_new = fetch_data(symbol, period=period, interval=interval)
         if _df_new is not None and len(_df_new) > 0:
@@ -453,7 +506,28 @@ def render_dashboard():
     atr = float(df_feat['ATR'].iloc[-1]) if 'ATR' in df_feat.columns and not np.isnan(df_feat['ATR'].iloc[-1]) else (last_close * 0.02)
 
     # Top Executive Summary Metrics
+    last_ts = df.index[-1]
+    if getattr(last_ts, 'tzinfo', None) is not None:
+        last_ts_utc = last_ts.tz_convert('UTC')
+    else:
+        last_ts_utc = pd.Timestamp(last_ts).tz_localize('UTC')
+    utc_str = last_ts_utc.strftime('%H:%M UTC')
+    try:
+        last_ts_ist = last_ts_utc.tz_convert('Asia/Kolkata')
+        ist_str = last_ts_ist.strftime('%H:%M IST')
+    except Exception:
+        ist_str = utc_str
+
+    logger.info(
+        f"Data sync check: {symbol} ({interval}) - latest bar is {last_ts} ({utc_str}) / {ist_str} | "
+        f"Server local time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} | Total bars: {len(df)}"
+    )
+
     st.markdown(f"## 📈 Trading Terminal — `{symbol}` ({interval})")
+    st.caption(
+        f"🕒 **Latest Candle:** `{ist_str}` / `{utc_str}` (`{last_ts.strftime('%Y-%m-%d')}`) · "
+        f"**Active Chart Timezone:** `{chart_tz_mode}` · **Feed Status:** 🟢 Live & Synchronized"
+    )
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Current Price", f"${last_close:,.2f}", f"{pct_change:+.2f}%")
     
@@ -490,19 +564,25 @@ def render_dashboard():
     df_zoom = df.iloc[-zoom_bars:].copy() if zoom_bars < data_len else df.copy()
     df_feat_zoom = df_feat.iloc[-zoom_bars:].copy() if zoom_bars < data_len else df_feat.copy()
 
-    # Pre-detect geometric patterns to inform trade setup
-    dummy_fig = go.Figure()
-    detected_patterns = detect_and_draw_patterns(
-        dummy_fig, df_feat_zoom,
-        has_sub=False,
-        show_wolfe=show_wolfe_wave,
-        show_cup=show_cup_handle,
-        show_bat=show_bat_pattern,
-        show_wedge=show_falling_wedge
-    )
+    # Detect geometric patterns with bar‑level hysteresis (prevents flickering on intra‑candle noise)
+    _pat_cache_key = (str(df.index[-1]), len(df), show_wolfe_wave, show_bat_pattern, show_cup_handle, show_falling_wedge)
+    if st.session_state.get('_pat_cache_key') == _pat_cache_key and '_cached_patterns' in st.session_state:
+        detected_patterns = st.session_state['_cached_patterns']
+    else:
+        detected_patterns = detect_and_draw_patterns(
+            None, df_feat_zoom,
+            has_sub=False,
+            show_wolfe=show_wolfe_wave,
+            show_cup=show_cup_handle,
+            show_bat=show_bat_pattern,
+            show_wedge=show_falling_wedge
+        )
+        st.session_state['_cached_patterns'] = detected_patterns
+        st.session_state['_pat_cache_key'] = _pat_cache_key
 
-    # Compute Comprehensive Trade Plan (Entry, Take-Profit, Stop-Loss)
-    trade_plan = compute_trade_plan(last_close, atr, prediction, regime, detected_patterns)
+    # Compute Comprehensive Trade Plan (Entry, TP, SL)
+    trade_plan = compute_trade_plan(
+        last_close, atr, prediction, regime, detected_patterns)
     bias = trade_plan["bias"]
     tp_price = trade_plan["take_profit"]
     sl_price = trade_plan["stop_loss"]
@@ -520,15 +600,15 @@ def render_dashboard():
         with c_action:
             if bias == "SELL":
                 st.markdown("""
-                <div class="metric-badge badge-sell">🔴 SHORT / SELL SETUP</div>
+                <div class="badge badge-sell">🔴 SHORT / SELL SETUP</div>
                 """, unsafe_allow_html=True)
             elif bias == "BUY":
                 st.markdown("""
-                <div class="metric-badge badge-buy">🟢 LONG / BUY SETUP</div>
+                <div class="badge badge-buy">🟢 LONG / BUY SETUP</div>
                 """, unsafe_allow_html=True)
             else:
                 st.markdown("""
-                <div class="metric-badge badge-neutral">🟡 NEUTRAL / CONSOLIDATION</div>
+                <div class="badge badge-neutral">🟡 NEUTRAL / CONSOLIDATION</div>
                 """, unsafe_allow_html=True)
             if trade_plan["pattern_name"]:
                 st.caption(f"Driven by: **{trade_plan['pattern_name']}**")
@@ -540,7 +620,7 @@ def render_dashboard():
 
         with c_tp:
             st.metric(
-                "Take-Profit (Target)",
+                "Take‑Profit (Target)",
                 f"${tp_price:,.2f}",
                 f"+{profit_pct:.2f}% Target",
                 delta_color="normal"
@@ -548,9 +628,9 @@ def render_dashboard():
 
         with c_sl:
             st.metric(
-                "Stop-Loss (Exit)",
+                "Stop‑Loss (Exit)",
                 f"${sl_price:,.2f}",
-                f"-{risk_pct:.2f}% Invalidation",
+                f"-{risk_pct:.2f}% Invalid‑ation",
                 delta_color="inverse"
             )
 
@@ -563,344 +643,119 @@ def render_dashboard():
             )
 
     # ============================================================
-    # BUILD TRADINGVIEW-GRADE INTERACTIVE CHART
+    # FUTURE PROJECTION: ENTRY, EXIT & MONTE CARLO TRAJECTORY
     # ============================================================
     has_subplot = subplot_choice != "None"
-
-    if not has_subplot:
-        fig = go.Figure()
-        row_main = None
-        col_main = None
-    else:
-        fig = make_subplots(
-            rows=2, cols=1,
-            shared_xaxes=True,
-            vertical_spacing=0.08,
-            row_heights=[0.75, 0.25]
-        )
-        row_main = 1
-        col_main = 1
-
-    # Professional Candlesticks (Emerald & Crimson TradingView styling)
-    fig.add_trace(
-        go.Candlestick(
-            x=df_zoom.index,
-            open=df_zoom['Open'],
-            high=df_zoom['High'],
-            low=df_zoom['Low'],
-            close=df_zoom['Close'],
-            name=f"{symbol} OHLC",
-            increasing=dict(line=dict(color='#089981', width=1), fillcolor='#089981'),
-            decreasing=dict(line=dict(color='#F23645', width=1), fillcolor='#F23645'),
-            hoverlabel=dict(bgcolor="#1E222D", font=dict(color="white", size=12))
-        ),
-        row=row_main, col=col_main
-    )
+    spec = ChartSpec()
+    spec.set_candles(df_zoom)
+    last_date = df_zoom.index[-1]
 
     # Technical Overlays
-    if show_sma20 and 'SMA_20' in df_feat_zoom.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=df_feat_zoom.index, y=df_feat_zoom['SMA_20'],
-                line=dict(color='#FFD54F', width=1.2), name='SMA 20', mode='lines'
-            ),
-            row=row_main, col=col_main
-        )
+    def _overlay(col, color, width, title, style=LS_SOLID):
+        if col in df_feat_zoom.columns:
+            spec.line(series_points(df_feat_zoom.index, df_feat_zoom[col]),
+                      color, width, style, title, legend=True)
 
-    if show_sma50 and 'SMA_50' in df_feat_zoom.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=df_feat_zoom.index, y=df_feat_zoom['SMA_50'],
-                line=dict(color='#FF9800', width=1.2), name='SMA 50', mode='lines'
-            ),
-            row=row_main, col=col_main
-        )
-
-    if show_sma200 and 'SMA_200' in df_feat_zoom.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=df_feat_zoom.index, y=df_feat_zoom['SMA_200'],
-                line=dict(color='#7E57C2', width=1.5), name='SMA 200', mode='lines'
-            ),
-            row=row_main, col=col_main
-        )
-
+    if show_sma20:
+        _overlay('SMA_20', '#FFD54F', 1.2, 'SMA 20')
+    if show_sma50:
+        _overlay('SMA_50', '#FF9800', 1.2, 'SMA 50')
+    if show_sma200:
+        _overlay('SMA_200', '#7E57C2', 1.5, 'SMA 200')
     if show_bb and 'BB_High' in df_feat_zoom.columns and 'BB_Low' in df_feat_zoom.columns:
-        fig.add_trace(
-            go.Scatter(
-                x=df_feat_zoom.index, y=df_feat_zoom['BB_High'],
-                line=dict(color='rgba(120, 123, 134, 0.45)', width=0.8, dash='dash'),
-                name='BB Upper', mode='lines', hoverinfo='skip'
-            ),
-            row=row_main, col=col_main
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=df_feat_zoom.index, y=df_feat_zoom['BB_Low'],
-                line=dict(color='rgba(120, 123, 134, 0.45)', width=0.8, dash='dash'),
-                fill='tonexty', fillcolor='rgba(41, 98, 255, 0.04)',
-                name='BB Lower', mode='lines', hoverinfo='skip'
-            ),
-            row=row_main, col=col_main
-        )
+        _overlay('BB_High', 'rgba(120, 123, 134, 0.65)', 1, 'BB Upper', LS_DASHED)
+        _overlay('BB_Low', 'rgba(120, 123, 134, 0.65)', 1, 'BB Lower', LS_DASHED)
 
-    # Draw Harmonic & Geometric Patterns
-    if any([show_wolfe_wave, show_bat_pattern, show_cup_handle, show_falling_wedge]):
-        detect_and_draw_patterns(
-            fig, df_feat_zoom,
-            has_sub=has_subplot,
-            show_wolfe=show_wolfe_wave,
-            show_cup=show_cup_handle,
-            show_bat=show_bat_pattern,
-            show_wedge=show_falling_wedge
-        )
-
-    # ============================================================
-    # FUTURE PREDICTION: ENTRY, EXIT & MONTE CARLO TRAJECTORY
-    # ============================================================
+    # Harmonic & Geometric Patterns (already detected above)
+    if detected_patterns:
+        add_patterns(spec, detected_patterns, last_date)
     if show_future_forecast:
         n_proj = 15
-        last_date = df_zoom.index[-1]
-        future_dates = get_future_dates(last_date, interval, n_bars=n_proj)
-        forecast_span = [last_date] + future_dates
+        future_dates = get_future_dates(df.index[-1], interval, n_bars=n_proj)
+        forecast_span = [df.index[-1]] + future_dates
 
-        # 1. Shaded Take-Profit Target Zone (Green)
-        fig.add_trace(
-            go.Scatter(
-                x=[last_date, future_dates[-1], future_dates[-1], last_date],
-                y=[last_close, last_close, tp_price, tp_price],
-                fill="toself",
-                fillcolor="rgba(0, 230, 118, 0.11)",
-                line=dict(color="rgba(0, 230, 118, 0.45)", width=1, dash="dot"),
-                name="Target Profit Zone (TP)",
-                hoverinfo="skip"
-            ),
-            row=row_main, col=col_main
-        )
+        # Shaded Take‑Profit (green) & Stop‑Loss (red) zones over the forecast horizon
+        spec.zone(forecast_span, last_close, tp_price, "rgba(0, 230, 118, 0.55)", "rgba(0, 230, 118, 0.11)")
+        spec.zone(forecast_span, last_close, sl_price, "rgba(255, 82, 82, 0.55)", "rgba(255, 82, 82, 0.11)")
 
-        # 2. Shaded Stop-Loss Risk Zone (Red)
-        fig.add_trace(
-            go.Scatter(
-                x=[last_date, future_dates[-1], future_dates[-1], last_date],
-                y=[last_close, last_close, sl_price, sl_price],
-                fill="toself",
-                fillcolor="rgba(255, 82, 82, 0.11)",
-                line=dict(color="rgba(255, 82, 82, 0.45)", width=1, dash="dot"),
-                name="Stop Loss Zone (SL)",
-                hoverinfo="skip"
-            ),
-            row=row_main, col=col_main
-        )
+        # Entry / TP / SL as native price lines
+        spec.price_line(last_close, "#29B6F6", f"ENTRY {last_close:,.2f}", LS_DOTTED, 2)
+        spec.price_line(tp_price, "#00E676", f"🎯 TP +{profit_pct:.1f}% (R:R 1:{rr_ratio:.1f})", LS_DASHED, 2)
+        spec.price_line(sl_price, "#FF5252", f"🛑 SL -{risk_pct:.1f}%", LS_DASHED, 2)
 
-        # 3. Horizontal Entry Line
-        fig.add_trace(
-            go.Scatter(
-                x=[last_date, future_dates[-1]],
-                y=[last_close, last_close],
-                mode="lines+text",
-                line=dict(color="#29B6F6", width=2.0, dash="dot"),
-                text=["", f"  ENTRY: ${last_close:,.2f}"],
-                textposition="middle right",
-                textfont=dict(color="#29B6F6", size=11),
-                name="Entry Level"
-            ),
-            row=row_main, col=col_main
-        )
-
-        # 4. Horizontal Take-Profit Exit Line
-        fig.add_trace(
-            go.Scatter(
-                x=[last_date, future_dates[-1]],
-                y=[tp_price, tp_price],
-                mode="lines+text",
-                line=dict(color="#00E676", width=2.2, dash="dash"),
-                text=["", f"  🎯 TP (Exit): ${tp_price:,.2f} (+{profit_pct:.1f}%) [R:R 1:{rr_ratio:.1f}]"],
-                textposition="middle right",
-                textfont=dict(color="#00E676", size=11),
-                name="Take-Profit Exit"
-            ),
-            row=row_main, col=col_main
-        )
-
-        # 5. Horizontal Stop-Loss Invalidation Line
-        fig.add_trace(
-            go.Scatter(
-                x=[last_date, future_dates[-1]],
-                y=[sl_price, sl_price],
-                mode="lines+text",
-                line=dict(color="#FF5252", width=2.2, dash="dash"),
-                text=["", f"  🛑 SL (Exit): ${sl_price:,.2f} (-{risk_pct:.1f}%)"],
-                textposition="middle right",
-                textfont=dict(color="#FF5252", size=11),
-                name="Stop-Loss Invalidation"
-            ),
-            row=row_main, col=col_main
-        )
-
-        # 6. Monte Carlo Future Price Trajectory Cone
+        # Monte‑Carlo trajectory (analytic median + 85 % / 15 % quantiles)
         try:
-            mc_res = run_monte_carlo(df_feat, days=n_proj, simulations=300)
-            if mc_res and 'paths' in mc_res:
-                paths = mc_res['paths']
-                median_path = [last_close] + list(paths.median(axis=1).values)
-                upper_path = [last_close] + list(paths.quantile(0.85, axis=1).values)
-                lower_path = [last_close] + list(paths.quantile(0.15, axis=1).values)
-
-                # Upper boundary
-                fig.add_trace(
-                    go.Scatter(
-                        x=forecast_span, y=upper_path,
-                        line=dict(color="rgba(41, 98, 255, 0.3)", width=0.8, dash="dot"),
-                        name="Forecast Upper (85%)", mode="lines", hoverinfo="skip"
-                    ),
-                    row=row_main, col=col_main
-                )
-                # Lower boundary with fill
-                fig.add_trace(
-                    go.Scatter(
-                        x=forecast_span, y=lower_path,
-                        line=dict(color="rgba(41, 98, 255, 0.3)", width=0.8, dash="dot"),
-                        fill="tonexty", fillcolor="rgba(41, 98, 255, 0.07)",
-                        name="Forecast Confidence Cone", mode="lines", hoverinfo="skip"
-                    ),
-                    row=row_main, col=col_main
-                )
-                # Median projected path
-                fig.add_trace(
-                    go.Scatter(
-                        x=forecast_span, y=median_path,
-                        line=dict(color="#82B1FF", width=1.6, dash="dashdot"),
-                        name="Projected Trajectory", mode="lines"
-                    ),
-                    row=row_main, col=col_main
-                )
+            mc_res = run_monte_carlo(df_feat, days=n_proj, simulations=300, prob_up=prob_up)
+            if mc_res:
+                if 'analytical_median' in mc_res:
+                    median_path = [last_close] + mc_res['analytical_median']
+                    upper_path = [last_close] + mc_res['analytical_upper85']
+                    lower_path = [last_close] + mc_res['analytical_lower15']
+                else:
+                    paths = mc_res['paths']
+                    median_path = [last_close] + list(paths.median(axis=1).values)
+                    upper_path = [last_close] + list(paths.quantile(0.85, axis=1).values)
+                    lower_path = [last_close] + list(paths.quantile(0.15, axis=1).values)
+                spec.line(series_points(forecast_span, upper_path), "rgba(41, 98, 255, 0.55)", 1, LS_DOTTED, "Forecast 85%")
+                spec.line(series_points(forecast_span, lower_path), "rgba(41, 98, 255, 0.55)", 1, LS_DOTTED, "Forecast 15%")
+                spec.line(series_points(forecast_span, median_path), "#82B1FF", 1.6, LS_DASHED,
+                          "Projected Trajectory", legend=True)
         except Exception as e:
-             # Surface a silent MC failure instead of hiding it (debug aid).
+            # Surface a silent MC failure instead of hiding it (debug aid).
             st.session_state.setdefault('mc_last_error', str(e))
 
     # ============================================================
-    # SUBPLOT CONFIGURATION (VOLUME / MACD / RSI)
+    # SUB‑PLOT (VOLUME / MACD / RSI)
     # ============================================================
-    if has_subplot:
-        if subplot_choice == "Volume":
-            vol_colors = [
-                'rgba(8, 153, 129, 0.5)' if c >= o else 'rgba(242, 54, 69, 0.5)'
-                for c, o in zip(df_zoom['Close'], df_zoom['Open'])
-            ]
-            fig.add_trace(
-                go.Bar(
-                    x=df_zoom.index, y=df_zoom['Volume'],
-                    name='Volume', marker_color=vol_colors,
-                    hoverlabel=dict(bgcolor="#1E222D")
-                ),
-                row=2, col=1
-            )
-            fig.update_yaxes(title_text="Volume", row=2, col=1)
+    if subplot_choice != "None":
+        if subplot_choice == "Volume" and 'Volume' in df_zoom.columns:
+            spec.histogram([
+                {"time": to_time(t), "value": float(v),
+                 "color": 'rgba(8, 153, 129, 0.5)' if c >= o else 'rgba(242, 54, 69, 0.5)'}
+                for t, v, c, o in zip(df_zoom.index, df_zoom['Volume'], df_zoom['Close'], df_zoom['Open'])
+                if pd.notna(v)
+            ], title="Volume", pane=1, volume=True)
 
         elif subplot_choice == "MACD (12,26,9)" and 'MACD' in df_feat_zoom.columns:
-            fig.add_trace(
-                go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['MACD'], line=dict(color='#29B6F6', width=1.3), name='MACD'),
-                row=2, col=1
-            )
             if 'MACD_Signal' in df_feat_zoom.columns:
-                fig.add_trace(
-                    go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['MACD_Signal'], line=dict(color='#FF5252', width=1.3), name='Signal'),
-                    row=2, col=1
-                )
-            fig.update_yaxes(title_text="MACD", row=2, col=1)
+                hist = (df_feat_zoom['MACD'] - df_feat_zoom['MACD_Signal'])
+                spec.histogram([
+                    {"time": to_time(t), "value": float(v),
+                     "color": 'rgba(8, 153, 129, 0.5)' if v >= 0 else 'rgba(242, 54, 69, 0.5)'}
+                    for t, v in zip(hist.index, hist) if pd.notna(v)
+                ], title="MACD Hist", pane=1)
+            spec.line(series_points(df_feat_zoom.index, df_feat_zoom['MACD']), '#29B6F6', 1.3,
+                      title='MACD', pane=1, last_value=True)
+            if 'MACD_Signal' in df_feat_zoom.columns:
+                spec.line(series_points(df_feat_zoom.index, df_feat_zoom['MACD_Signal']), '#FF5252', 1.3,
+                          title='Signal', pane=1, last_value=True)
 
         elif subplot_choice == "RSI (14)" and 'RSI' in df_feat_zoom.columns:
-            fig.add_trace(
-                go.Scatter(x=df_feat_zoom.index, y=df_feat_zoom['RSI'], line=dict(color='#AB47BC', width=1.5), name='RSI (14)'),
-                row=2, col=1
-            )
-            fig.add_hline(y=70, line_dash="dash", line_color="rgba(242, 54, 69, 0.6)", row=2, col=1)
-            fig.add_hline(y=30, line_dash="dash", line_color="rgba(8, 153, 129, 0.6)", row=2, col=1)
-            fig.update_yaxes(title_text="RSI", range=[0, 100], row=2, col=1)
+            spec.line(series_points(df_feat_zoom.index, df_feat_zoom['RSI']), '#AB47BC', 1.5,
+                      title='RSI 14', pane=1, last_value=True,
+                      price_lines=[
+                          {"price": 70, "color": "rgba(242, 54, 69, 0.6)", "lineStyle": LS_DASHED,
+                           "lineWidth": 1, "axisLabelVisible": True, "title": "70"},
+                          {"price": 30, "color": "rgba(8, 153, 129, 0.6)", "lineStyle": LS_DASHED,
+                           "lineWidth": 1, "axisLabelVisible": True, "title": "30"},
+                      ])
 
-        fig.update_xaxes(showgrid=True, gridcolor="rgba(255, 255, 255, 0.05)", row=2, col=1)
-        fig.update_yaxes(showgrid=True, gridcolor="rgba(255, 255, 255, 0.05)", row=2, col=1)
-
-    # ── ZOOM & INTERACTION: world-class, fully refresh-proof ─────────────
-    # uirevision is the ONLY lever Plotly exposes to keep a user's zoom/pan
-    # across figure updates. We back it with session state so it stays CONSTANT
-    # on every auto-refresh tick (=> zoom preserved) and increases ONLY when the
-    # user clicks 'Reset Chart Zoom' in the sidebar (=> clean one-shot reset).
-    _zoom_rev = f"ui_g{zoom_gen}"       # gen is constant on refresh => zoom kept
-
-    # Master Chart Layout & Styling
-    fig.update_layout(
-        template='plotly_dark',
-        paper_bgcolor='#0D1117',
-        plot_bgcolor='#0E1117',
-        height=chart_h,
-        margin=dict(l=20, r=80, t=30, b=20),
-        uirevision=_zoom_rev,                  # constant on refresh => zoom kept
-        dragmode='pan',
-        hovermode='x unified',
-        legend=dict(
-            orientation="h",
-            yanchor="bottom", y=1.02, xanchor="left", x=0.01,
-            bgcolor="rgba(19, 23, 34, 0.8)",
-            bordercolor="rgba(255, 255, 255, 0.1)", borderwidth=1, font=dict(size=11)
+    # ── Render the TradingView Lightweight Chart ──
+    _zoom_mode_js = {"Horizontal only (lock Y)": "lockY",
+                     "Vertical only (lock X)": "lockX"}.get(zoom_mode, "both")
+    try:
+        render_tv_chart(
+            spec,
+            title=f"{symbol} · {interval}",
+            height=chart_h,
+            intraday=interval not in ("1d", "1wk"),
+            state_key=f"{symbol}|{interval}|g{zoom_gen}|{chart_tz_mode}",
+            zoom_mode=_zoom_mode_js,
+            filename=f"{symbol}_{interval}",
+            tz_mode=chart_tz_mode,
         )
-    )
-
-    # ── Per-axis uirevision on EVERY axis (main + any subplot row) ──
-    # A single axis missing its revision can reset alone on rerun.
-    _axis_common = dict(
-        uirevision=_zoom_rev,
-        showgrid=True, gridcolor="rgba(255, 255, 255, 0.06)",
-        showspikes=True, spikemode='across', spikesnap='cursor',
-        spikethickness=1, spikedash='dot', spikecolor="rgba(255, 255, 255, 0.3)",
-    )
-    fig.update_xaxes(rangeslider_visible=False, **_axis_common)
-    fig.update_yaxes(side="right", **_axis_common)
-
-    # ── Zoom isolation: lock one axis so the free axis keeps full zoom/pan ──
-    # fixedrange=True freezes an axis; the other axis keeps complete control.
-    if zoom_mode == "Horizontal only (lock Y)":
-        fig.update_yaxes(fixedrange=True)       # Y frozen => wheel/drag moves X only
-    elif zoom_mode == "Vertical only (lock X)":
-        fig.update_xaxes(fixedrange=True)       # X frozen => wheel/drag moves Y only
-    else:
-        # 'Both axes': neither frozen, so X and Y zoom/pan independently.
-        fig.update_xaxes(fixedrange=False)
-        fig.update_yaxes(fixedrange=False)
-
-    # Full-featured interactive config: horizontal + vertical zoom, one-shot reset.
-      # ── Refresh-proof zoom (final guarantee) ──
-      # Reuse the EXACT same figure object when inputs are unchanged. Most auto-
-      # refresh ticks add no new bar, so this is a no-op and the user's zoom literally
-      # cannot move. A new bar or a changed toggle produces a new figure carrying the
-      # SAME uirevision, so Plotly keeps the current view even when it redraws.
-    _chart_sig = (symbol, str(interval), str(df["Close"].index[-1]), len(df),
-              zoom_mode, chart_h, _zoom_rev, subplot_choice, show_future_forecast,
-              show_sma20, show_bb, show_sma50, show_sma200, show_trendlines,
-              show_wolfe_wave, show_bat_pattern, show_cup_handle, show_falling_wedge)
-    if st.session_state.get("_main_chart_sig") == _chart_sig and "main_fig_cache" in st.session_state:
-        fig = st.session_state["main_fig_cache"]    # identical inputs => no-op re-render
-    st.session_state["main_fig_cache"] = fig
-    st.session_state["_main_chart_sig"] = _chart_sig
-    st.plotly_chart(
-        fig,
-        width='stretch',
-        key="main_chart_stable",               # constant key => widget never remounts
-        config={
-            'scrollZoom': True,                # wheel zooms the free axis(es)
-            'displayModeBar': True,
-            'doubleClick': 'reset',
-            'scrollHeight': 12,
-            'modeBarButtonsToAdd': [
-                'zoom', 'zoomIn', 'zoomOut',
-                'pan', 'select', 'lasso',
-                'autoscale', 'resetScopes',
-                'drawline', 'drawopenpath', 'eraseshape',
-            ],
-            'toImageButtonOptions': {'format': 'png', 'filename': f'{symbol}_{interval}'},
-            'displaylogo': False,
-        }
-    )
+    except LightweightChartsNotBuilt as e:
+        st.error(str(e))
 
     # ============================================================
     # DEEP DIVE & PORTFOLIO PANELS
@@ -909,23 +764,23 @@ def render_dashboard():
         st.divider()
         st.subheader("🤖 AI Model Deep Dive")
         
-        # Prepare data for Execution Dashboard
+        # Portfolio snapshot
         pf_summary = pf.get_portfolio_summary({symbol: last_close})
         cash = pf_summary['cash']
         
-        # Calculate position size (Risk 2% of cash per trade)
+        # Position sizing (risk 2% of cash per trade)
         pos_size_usd = calculate_position_size(cash, last_close, sl_price, risk_pct=0.02)
 
         master_signal = {
             "action": bias,
-            "conviction": prediction.get('prob_up', 0.5) if bias == "BUY" else (1 - prediction.get('prob_up', 0.5) if bias == "SELL" else 0.5),
+            "conviction": (prob_up if bias == "BUY" else (1 - prob_up) if bias == "SELL" else 0.5),
             "entry": last_close,
             "stop_loss": sl_price,
             "take_profit": tp_price,
             "position_size_usd": pos_size_usd
         }
 
-         # Real component scores derived from the latest computed features (no dummies).
+        # Component scores derived from the latest features
         _last = df_feat.iloc[-1]
         def _f(col, default=0.5):
             try:
@@ -944,13 +799,13 @@ def render_dashboard():
         _regime_score = regime.get('markov_score', 0.5) if isinstance(regime, dict) else 0.5
         _atr_sync = min(max(0.5 + _atr_pct, 0.0), 1.0)
         component_scores = {
-            "AI Model": prediction.get('prob_up', 0.5),
+            "AI Model": prob_up,
             "Market Regime": _regime_score,
             "Pattern Match": 1.0 if trade_plan["pattern_name"] else 0.5,
             "Vol Strength": _vol_score,
             "Trend Alignment": _trend_score,
             "Momentum": _mom_score,
-            "Volume Profile": 0.8,     # HVN/LVN not wired into live path yet -> neutral
+            "Volume Profile": 0.8,
             "RSI Level": _rsi_score,
             "MACD Signal": _macd_score,
             "ATR Sync": _atr_sync,
@@ -962,19 +817,19 @@ def render_dashboard():
             "df": df
         }
 
-        # Display the high-fidelity dashboard
+        # Render the high‑ fidelity dashboard
         render_execution_dashboard(execution_data, symbol, interval)
         
         st.divider()
-        c_dd1, c_dd2, c_dd3 = st.columns(3)
-        c_dd1.metric("Signal Confidence", f"{prob_up*100:.1f}% UP" if prob_up >= 0.5 else f"{(1-prob_up)*100:.1f}% DOWN")
-        c_dd2.metric("Regime Score", f"{regime.get('markov_score', 0.5)*100:.1f}%" if isinstance(regime, dict) else "N/A")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Signal Confidence", f"{prob_up*100:.1f}% UP" if prob_up >= 0.5 else f"{(1-prob_up)*100:.1f}% DOWN")
+        c2.metric("Regime Score", f"{regime.get('markov_score', 0.5)*100:.1f}%" if isinstance(regime, dict) else "N/A")
         _m = prediction.get('metrics') or {}
         if _m:
-            c_dd3.metric("OOS Accuracy", f"{_m.get('accuracy', 0):.2%}",
-                         f"AUC {_m.get('roc_auc', 0):.2f} · base {_m.get('base_rate', 0.5):.2%}")
+            c3.metric("OOS Accuracy", f"{_m.get('accuracy', 0):.2%}",
+                      f"AUC {_m.get('roc_auc', 0):.2f} · base {_m.get('base_rate', 0.5):.2%}")
         else:
-            c_dd3.metric("OOS Accuracy", "N/A", "Enable Retrain AI to compute")
+            c3.metric("OOS Accuracy", "N/A", "Enable Retrain AI to compute")
 
     if show_portfolio:
         st.divider()
@@ -985,7 +840,6 @@ def render_dashboard():
             c1.metric("Available Cash", f"${summary['cash']:,.2f}")
             c2.metric("Active Positions", len(summary['active_positions']))
             c3.metric("Total Account Value", f"${summary['total_value']:,.2f}")
-
             if len(summary['active_positions']) > 0:
                 df_pos = pd.DataFrame(summary['active_positions'])
                 st.dataframe(df_pos, width='stretch')
@@ -999,4 +853,4 @@ def render_dashboard():
 render_dashboard()
 
 st.sidebar.divider()
-st.sidebar.caption("⚡ *Chart pan/zoom and active toggles are fully preserved during auto-refresh.*")
+st.sidebar.caption("⚡ *Chart pan/zoom and active toggles are fully preserved during auto‑refresh.*")

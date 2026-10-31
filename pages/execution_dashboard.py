@@ -110,25 +110,46 @@ def render_execution_dashboard(data: dict, symbol: str, interval: str):
     # 3. PnL Heatmap Analytics
     st.markdown("### 📊 PnL Time Slot Heatmap")
     df = data.get("df", None)
-    if df is not None and len(df) > 20:
+    if df is not None and len(df) > 5:
         df_pnl = df.copy()
-        df_pnl['Hour'] = pd.to_datetime(df_pnl.index).hour
-        df_pnl['Day'] = pd.to_datetime(df_pnl.index).day_name()
+        dt_idx = pd.to_datetime(df_pnl.index)
+        df_pnl['Day'] = dt_idx.day_name()
         df_pnl['Return_Pct'] = df_pnl['Close'].pct_change() * 100.0
 
-        pivot_table = df_pnl.pivot_table(index='Day', columns='Hour', values='Return_Pct', aggfunc='mean').fillna(0)
-        
         days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        
+        # Check if intraday hours vary
+        has_intraday_hours = dt_idx.hour.nunique() > 1
+        if has_intraday_hours:
+            df_pnl['TimeSlot'] = dt_idx.hour
+            x_label = "Hour of Day (UTC)"
+            chart_title = "Expected Return Density by Hour of Day"
+            pivot_table = df_pnl.pivot_table(index='Day', columns='TimeSlot', values='Return_Pct', aggfunc='mean').fillna(0)
+        else:
+            # Daily data: Seasonality by Day of Week vs Month
+            df_pnl['TimeSlot'] = dt_idx.strftime('%b')
+            months_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            x_label = "Month of Year"
+            chart_title = "Expected Return Seasonality by Day of Week & Month"
+            pivot_table = df_pnl.pivot_table(index='Day', columns='TimeSlot', values='Return_Pct', aggfunc='mean').fillna(0)
+            pivot_table = pivot_table.reindex(columns=[m for m in months_order if m in pivot_table.columns])
+
         pivot_table = pivot_table.reindex([d for d in days_order if d in pivot_table.index])
 
         fig_heat = px.imshow(
             pivot_table,
-            labels=dict(x="Hour of Day", y="Day of Week", color="Avg Return (%)"),
+            labels=dict(x=x_label, y="Day of Week", color="Avg Return (%)"),
             color_continuous_scale="RdYlGn",
-            title="Expected Return Density by Time Slot"
+            title=chart_title,
+            aspect="auto"
         )
         fig_heat.update_layout(height=350, template="plotly_dark")
-        st.plotly_chart(fig_heat, use_container_width=True)
+        try:
+            st.plotly_chart(fig_heat, width="stretch")
+        except TypeError:
+            st.plotly_chart(fig_heat, use_container_width=True)
+    else:
+        st.info("ℹ️ Fetch data to generate the PnL Return Density Heatmap.")
 
     st.divider()
 
@@ -157,7 +178,10 @@ def render_execution_dashboard(data: dict, symbol: str, interval: str):
         st.session_state['signal_log'].append(new_entry)
 
     log_df = pd.DataFrame(st.session_state['signal_log'])
-    st.dataframe(log_df, use_container_width=True)
+    try:
+        st.dataframe(log_df, width="stretch")
+    except TypeError:
+        st.dataframe(log_df, use_container_width=True)
 
     csv_data = log_df.to_csv(index=False).encode('utf-8')
     st.download_button(
@@ -166,3 +190,84 @@ def render_execution_dashboard(data: dict, symbol: str, interval: str):
         file_name=f"execution_log_{symbol}_{interval}.csv",
         mime="text/csv"
     )
+
+
+def standalone_page():
+    """Standalone page renderer when accessed via Streamlit sidebar navigation."""
+    st.set_page_config(page_title="Execution Dashboard", page_icon="⚡", layout="wide")
+    
+    c1, c2, c3 = st.columns([2, 1, 1])
+    with c1:
+        symbol = st.text_input("Trading Symbol", value="BTC-USD", key="exec_symbol")
+    with c2:
+        interval = st.selectbox("Timeframe", ["1d", "1h", "5m", "1m"], index=0, key="exec_interval")
+    with c3:
+        st.write("")
+        st.write("")
+        refresh_btn = st.button("🔄 Refresh Analysis", use_container_width=True)
+
+    with st.spinner(f"Analyzing {symbol} ({interval})..."):
+        try:
+            from data_engine import fetch_data
+            from features import add_features
+            from models import predict_next_move
+            from quantum_signals import get_quantum_signals
+            from patterns import detect_and_draw_patterns
+            from alpha_engine import compute_trade_plan
+
+            df = fetch_data(symbol, interval=interval)
+            if df is not None and not df.empty:
+                df_feat = add_features(df)
+                prediction = predict_next_move(df_feat)
+                regime = get_quantum_signals(df_feat)
+                last_close = float(df['Close'].iloc[-1])
+                
+                # ATR
+                tr1 = df['High'] - df['Low']
+                tr2 = (df['High'] - df['Close'].shift()).abs()
+                tr3 = (df['Low'] - df['Close'].shift()).abs()
+                tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+                atr = float(tr.rolling(14).mean().iloc[-1]) if len(tr) >= 14 else float(last_close * 0.02)
+                
+                detected_patterns = detect_and_draw_patterns(None, df_feat)
+                trade_plan = compute_trade_plan(last_close, atr, prediction, regime, detected_patterns)
+                
+                prob_up = prediction.get('prob_up', 0.5)
+                bias = trade_plan["bias"]
+                master_signal = {
+                    "action": bias,
+                    "conviction": prob_up if bias == "BUY" else (1 - prob_up if bias == "SELL" else 0.5),
+                    "entry": last_close,
+                    "stop_loss": trade_plan["stop_loss"],
+                    "take_profit": trade_plan["take_profit"],
+                    "position_size_usd": 10000.0 * 0.02
+                }
+                
+                component_scores = {
+                    "AI Model": prob_up,
+                    "Market Regime": regime.get('markov_score', 0.5) if isinstance(regime, dict) else 0.5,
+                    "Pattern Match": 1.0 if trade_plan["pattern_name"] else 0.5,
+                    "Vol Strength": 0.7,
+                    "Trend Alignment": 0.65,
+                    "Momentum": 0.6,
+                    "Volume Profile": 0.8,
+                    "RSI Level": 0.55,
+                    "MACD Signal": 0.6,
+                    "ATR Sync": 0.5,
+                }
+                
+                execution_data = {
+                    "master_trade_signal": master_signal,
+                    "component_scores": component_scores,
+                    "df": df
+                }
+                render_execution_dashboard(execution_data, symbol, interval)
+            else:
+                st.error(f"Could not load data for symbol {symbol}.")
+        except Exception as e:
+            st.error(f"Error computing execution dashboard: {e}")
+
+
+if __name__ == "__main__":
+    standalone_page()
+

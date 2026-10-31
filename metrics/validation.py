@@ -101,18 +101,25 @@ class PredictionTracker:
         Calculate prediction drift metrics.
         Tracks whether model predictions are degrading over time.
         """
-        if len(self.predictions_list) < window:
-            return {"drift_detected": False, "samples": len(self.predictions_list)}
+        if not self.predictions_list:
+            df = self.load_historical_predictions()
+            if df.empty or len(self.predictions_list) < 4:
+                return {
+                    "drift_detected": False,
+                    "drift_magnitude": 0.0,
+                    "mean_prob_first_half": 0.5,
+                    "mean_prob_second_half": 0.5,
+                    "samples": len(self.predictions_list),
+                    "samples_analyzed": len(self.predictions_list)
+                }
+
+        recent = self.predictions_list[-window:] if len(self.predictions_list) >= window else self.predictions_list
+        mid_point = max(1, len(recent) // 2)
+        first_half = np.array([p.get("prob_up", 0.5) for p in recent[:mid_point]])
+        second_half = np.array([p.get("prob_up", 0.5) for p in recent[mid_point:]])
         
-        recent = self.predictions_list[-window:]
-        
-        # Calculate mean probability over time windows
-        mid_point = len(recent) // 2
-        first_half = np.array([p["prob_up"] for p in recent[:mid_point]])
-        second_half = np.array([p["prob_up"] for p in recent[mid_point:]])
-        
-        mean_first = np.mean(first_half)
-        mean_second = np.mean(second_half)
+        mean_first = float(np.mean(first_half))
+        mean_second = float(np.mean(second_half))
         drift_magnitude = abs(mean_second - mean_first)
         
         drift_metrics = {
@@ -120,6 +127,7 @@ class PredictionTracker:
             "drift_magnitude": float(drift_magnitude),
             "mean_prob_first_half": float(mean_first),
             "mean_prob_second_half": float(mean_second),
+            "samples": len(self.predictions_list),
             "samples_analyzed": len(recent)
         }
         
@@ -135,7 +143,10 @@ class PredictionTracker:
         try:
             with open(self.tracking_file, 'r') as f:
                 for line in f:
-                    records.append(json.loads(line))
+                    line = line.strip()
+                    if line:
+                        records.append(json.loads(line))
+            self.predictions_list = records
             return pd.DataFrame(records)
         except Exception as e:
             logger.error(f"Failed to load predictions: {e}")

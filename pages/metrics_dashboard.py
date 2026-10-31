@@ -42,9 +42,9 @@ class MetricsDashboard:
         drift_metrics = tracker.calculate_drift(window=100)
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Total Predictions", len(df_predictions))
-        col2.metric("Drift Detected", "⚠️ Yes" if drift_metrics["drift_detected"] else "✓ No")
-        col3.metric("Drift Magnitude", f"{drift_metrics['drift_magnitude']:.4f}")
-        col4.metric("Recent Mean Prob", f"{drift_metrics['mean_prob_second_half']:.2f}")
+        col2.metric("Drift Detected", "⚠️ Yes" if drift_metrics.get("drift_detected", False) else "✓ No")
+        col3.metric("Drift Magnitude", f"{drift_metrics.get('drift_magnitude', 0.0):.4f}")
+        col4.metric("Recent Mean Prob", f"{drift_metrics.get('mean_prob_second_half', 0.5):.2f}")
         
         # Probability distribution chart
         if not df_predictions.empty:

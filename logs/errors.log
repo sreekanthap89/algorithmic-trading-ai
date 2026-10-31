@@ -29,3 +29,35 @@ Traceback (most recent call last):
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
 ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
 2026-10-04 01:51:09,914 - yfinance - ERROR - [history.py:372] - history() - $BTC-USD: 1m data not available for startTime=1790208000 and endTime=1791058868. Only 8 days worth of 1m granularity data are allowed to be fetched per request.
+2026-10-04 12:29:39,531 - asyncio - ERROR - [base_events.py:1833] - default_exception_handler() - Exception in callback Server.stop()
+handle: <Handle Server.stop()>
+Traceback (most recent call last):
+  File "/Users/sree/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/streamlit/web/server/server.py", line 120, in stop
+    cli_util.print_to_cli("  Stopping...", fg="blue")
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/streamlit/cli_util.py", line 34, in print_to_cli
+    click.secho(message, **kwargs)
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/click/termui.py", line 811, in secho
+    return echo(message, file=file, nl=nl, err=err, color=color)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/click/utils.py", line 345, in echo
+    file.write(out)  # type: ignore
+    ^^^^^^^^^^^^^^^
+OSError: [Errno 5] Input/output error
+2026-10-04 12:29:49,636 - asyncio - ERROR - [base_events.py:1833] - default_exception_handler() - Exception in callback Server.stop()
+handle: <Handle Server.stop()>
+Traceback (most recent call last):
+  File "/Users/sree/.local/share/uv/python/cpython-3.12.14-macos-aarch64-none/lib/python3.12/asyncio/events.py", line 88, in _run
+    self._context.run(self._callback, *self._args)
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/streamlit/web/server/server.py", line 120, in stop
+    cli_util.print_to_cli("  Stopping...", fg="blue")
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/streamlit/cli_util.py", line 34, in print_to_cli
+    click.secho(message, **kwargs)
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/click/termui.py", line 811, in secho
+    return echo(message, file=file, nl=nl, err=err, color=color)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sree/Documents/DEV/PY/algorithmic-trading-ai/.venv/lib/python3.12/site-packages/click/utils.py", line 345, in echo
+    file.write(out)  # type: ignore
+    ^^^^^^^^^^^^^^^
+OSError: [Errno 5] Input/output error

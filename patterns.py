@@ -610,7 +610,7 @@ def draw_falling_wedge(fig: go.Figure, p: Dict, has_sub: bool) -> None:
 # ─────────────────────────────────────────────────────────────
 
 def detect_and_draw_patterns(
-    fig: go.Figure,
+    fig: Optional[go.Figure],
     df: pd.DataFrame,
     has_sub: bool,
     show_wolfe:  bool = False,
@@ -623,6 +623,8 @@ def detect_and_draw_patterns(
     Each detector is wrapped in try/except so a single failure never
     crashes the chart.
     Returns a dictionary of detected patterns for trade execution planning.
+    Pass ``fig=None`` to only detect (no Plotly drawing) — used by the
+    TradingView Lightweight Charts renderer in ``tv_chart.py``.
     """
     # 🛡️ Robustness: Sanitization pass to handle NaNs in price data before detection
     df_clean = df.copy()
@@ -634,7 +636,8 @@ def detect_and_draw_patterns(
         try:
             pat = detect_wolfe_wave(df_clean)
             if pat:
-                draw_wolfe_wave(fig, pat, has_sub)
+                if fig is not None:
+                    draw_wolfe_wave(fig, pat, has_sub)
                 detected["wolfe_wave"] = pat
         except Exception:
             pass
@@ -643,7 +646,8 @@ def detect_and_draw_patterns(
         try:
             pat = detect_cup_handle(df_clean)
             if pat:
-                draw_cup_handle(fig, pat, has_sub)
+                if fig is not None:
+                    draw_cup_handle(fig, pat, has_sub)
                 detected["cup_handle"] = pat
         except Exception:
             pass
@@ -652,7 +656,8 @@ def detect_and_draw_patterns(
         try:
             pat = detect_bearish_bat(df_clean)
             if pat:
-                draw_bearish_bat(fig, pat, has_sub)
+                if fig is not None:
+                    draw_bearish_bat(fig, pat, has_sub)
                 detected["bearish_bat"] = pat
         except Exception:
             pass
@@ -661,7 +666,8 @@ def detect_and_draw_patterns(
         try:
             pat = detect_falling_wedge(df_clean)
             if pat:
-                draw_falling_wedge(fig, pat, has_sub)
+                if fig is not None:
+                    draw_falling_wedge(fig, pat, has_sub)
                 detected["falling_wedge"] = pat
         except Exception:
             pass

@@ -1,2 +1,55 @@
 {"timestamp": "2026-10-04T02:31:27.479567", "signal": "NEUTRAL", "prob_up": 0.4989407956600189, "actual_result": null, "metadata": {}}
 {"timestamp": "2026-10-04T03:14:21.945805", "signal": "NEUTRAL", "prob_up": 0.5196847915649414, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:22:06.264764", "signal": "BUY (UP)", "prob_up": 0.6412274241447449, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:23:06.594488", "signal": "BUY (UP)", "prob_up": 0.6412274241447449, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:23:06.594817", "signal": "NEUTRAL", "prob_up": 0.49362698197364807, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:28:19.447764", "signal": "NEUTRAL", "prob_up": 0.49362698197364807, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T04:28:19.448149", "signal": "BUY (UP)", "prob_up": 0.6533235311508179, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:31:20.098876", "signal": "BUY (UP)", "prob_up": 0.6533235311508179, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:31:20.098971", "signal": "NEUTRAL", "prob_up": 0.5191414952278137, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:32:19.222058", "signal": "NEUTRAL", "prob_up": 0.5191414952278137, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T04:32:19.222173", "signal": "BUY (UP)", "prob_up": 0.6081511378288269, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:36:18.492514", "signal": "BUY (UP)", "prob_up": 0.6081511378288269, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:37:24.592756", "signal": "BUY (UP)", "prob_up": 0.6081511378288269, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T04:37:24.592886", "signal": "NEUTRAL", "prob_up": 0.5222889184951782, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:44:02.429392", "signal": "NEUTRAL", "prob_up": 0.5222889184951782, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:44:02.429522", "signal": "NEUTRAL", "prob_up": 0.5355613231658936, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:46:02.381454", "signal": "NEUTRAL", "prob_up": 0.5355613231658936, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T04:46:02.381818", "signal": "BUY (UP)", "prob_up": 0.595326840877533, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:47:02.709980", "signal": "BUY (UP)", "prob_up": 0.595326840877533, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:51:52.299650", "signal": "NEUTRAL", "prob_up": 0.5119539499282837, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:52:22.442779", "signal": "NEUTRAL", "prob_up": 0.5119539499282837, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:52:22.443103", "signal": "NEUTRAL", "prob_up": 0.5199534296989441, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:57:05.782418", "signal": "NEUTRAL", "prob_up": 0.5199534296989441, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T04:57:05.782856", "signal": "BUY (UP)", "prob_up": 0.6714800000190735, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:57:35.800280", "signal": "BUY (UP)", "prob_up": 0.6714800000190735, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T04:57:35.800601", "signal": "SELL (DOWN)", "prob_up": 0.43547487258911133, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T04:59:05.770880", "signal": "SELL (DOWN)", "prob_up": 0.43547487258911133, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T04:59:05.771298", "signal": "NEUTRAL", "prob_up": 0.5244680643081665, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:13:46.899243", "signal": "SELL (DOWN)", "prob_up": 0.19786034524440765, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:15:38.453484", "signal": "SELL (DOWN)", "prob_up": 0.23476043343544006, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:34:15.038635", "signal": "NEUTRAL", "prob_up": 0.5361846685409546, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:45:44.918712", "signal": "NEUTRAL", "prob_up": 0.5464610457420349, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:51:42.465213", "signal": "NEUTRAL", "prob_up": 0.5464610457420349, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T11:51:42.465382", "signal": "SELL (DOWN)", "prob_up": 0.19732840359210968, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:53:11.831413", "signal": "SELL (DOWN)", "prob_up": 0.19732840359210968, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T11:53:11.831559", "signal": "SELL (DOWN)", "prob_up": 0.27650296688079834, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T11:56:11.650599", "signal": "SELL (DOWN)", "prob_up": 0.27650296688079834, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T11:56:11.650763", "signal": "BUY (UP)", "prob_up": 0.6213251948356628, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T12:04:56.030638", "signal": "NEUTRAL", "prob_up": 0.46768516302108765, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T12:12:55.143729", "signal": "NEUTRAL", "prob_up": 0.46768516302108765, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T12:12:55.143922", "signal": "NEUTRAL", "prob_up": 0.4793297350406647, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T12:16:42.958623", "signal": "NEUTRAL", "prob_up": 0.4793297350406647, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T12:19:19.751005", "signal": "NEUTRAL", "prob_up": 0.4793297350406647, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T12:19:19.751150", "signal": "SELL (DOWN)", "prob_up": 0.2748385965824127, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:35:25.527174", "signal": "BUY (UP)", "prob_up": 0.7261034250259399, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:36:14.898291", "signal": "BUY (UP)", "prob_up": 0.7869953513145447, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:38:03.013649", "signal": "BUY (UP)", "prob_up": 0.7869953513145447, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T19:38:03.013821", "signal": "BUY (UP)", "prob_up": 0.7154406905174255, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:38:48.545366", "signal": "BUY (UP)", "prob_up": 0.7154406905174255, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T19:38:48.545526", "signal": "BUY (UP)", "prob_up": 0.6710108518600464, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:44:51.364701", "signal": "BUY (UP)", "prob_up": 0.6710108518600464, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-10-04T19:44:51.365038", "signal": "BUY (UP)", "prob_up": 0.6418492197990417, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:46:32.156401", "signal": "BUY (UP)", "prob_up": 0.6418492197990417, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-10-04T19:46:32.156519", "signal": "BUY (UP)", "prob_up": 0.7169774770736694, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-10-04T19:49:22.350435", "signal": "BUY (UP)", "prob_up": 0.7171198725700378, "actual_result": null, "metadata": {}}
