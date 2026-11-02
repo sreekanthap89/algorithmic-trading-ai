@@ -1,0 +1,34 @@
+{"timestamp": "2026-11-02T18:23:24.230957", "signal": "NEUTRAL", "prob_up": 0.45413977138526396, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:25:19.994587", "signal": "NEUTRAL", "prob_up": 0.45413977138526396, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-11-02T18:25:19.994974", "signal": "SELL (DOWN)", "prob_up": 0.34479385065725054, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:32:05.094277", "signal": "SELL (DOWN)", "prob_up": 0.34479385065725054, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T18:32:05.094453", "signal": "NEUTRAL", "prob_up": 0.45758606250676265, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:36:19.816683", "signal": "NEUTRAL", "prob_up": 0.45758606250676265, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-11-02T18:36:19.816829", "signal": "NEUTRAL", "prob_up": 0.451275260461254, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:40:38.629133", "signal": "NEUTRAL", "prob_up": 0.451275260461254, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-11-02T18:40:38.629272", "signal": "SELL (DOWN)", "prob_up": 0.4266056189479078, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:45:16.600387", "signal": "SELL (DOWN)", "prob_up": 0.4266056189479078, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T18:45:16.600528", "signal": "NEUTRAL", "prob_up": 0.5162851308627149, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:52:15.041418", "signal": "NEUTRAL", "prob_up": 0.5162851308627149, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T18:52:15.041558", "signal": "SELL (DOWN)", "prob_up": 0.36004698350137393, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:55:14.038279", "signal": "SELL (DOWN)", "prob_up": 0.36004698350137393, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-11-02T18:55:14.038422", "signal": "NEUTRAL", "prob_up": 0.4587522677274178, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:02:21.125999", "signal": "NEUTRAL", "prob_up": 0.48710577445270387, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:05:21.594617", "signal": "NEUTRAL", "prob_up": 0.48710577445270387, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T19:05:21.594810", "signal": "NEUTRAL", "prob_up": 0.4445177727102689, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:10:28.417022", "signal": "NEUTRAL", "prob_up": 0.4445177727102689, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T19:10:28.417434", "signal": "SELL (DOWN)", "prob_up": 0.35790387535429774, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:34:38.768537", "signal": "NEUTRAL", "prob_up": 0.46292805132613773, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:35:11.197095", "signal": "NEUTRAL", "prob_up": 0.46292805132613773, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T19:35:11.197273", "signal": "NEUTRAL", "prob_up": 0.4619357897754041, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:40:12.384423", "signal": "NEUTRAL", "prob_up": 0.4619357897754041, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-11-02T19:40:12.384803", "signal": "NEUTRAL", "prob_up": 0.4763648650164283, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:45:25.396644", "signal": "NEUTRAL", "prob_up": 0.4763648650164283, "actual_result": false, "metadata": {}}
+{"timestamp": "2026-11-02T19:45:25.396925", "signal": "NEUTRAL", "prob_up": 0.5125798185889952, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T20:57:04.221457", "signal": "NEUTRAL", "prob_up": 0.5125798185889952, "actual_result": true, "metadata": {}}
+{"timestamp": "2026-11-02T20:57:04.221787", "signal": "NEUTRAL", "prob_up": 0.4762886293650466, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T20:57:31.601562", "signal": "NEUTRAL", "prob_up": 0.4802579863659599, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:46:47.872237", "signal": "NEUTRAL", "prob_up": 0.5355416122762707, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:51:39.579903", "signal": "NEUTRAL", "prob_up": 0.4923757259413875, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:59:07.533852", "signal": "NEUTRAL", "prob_up": 0.4821294150998783, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:31:39.037857", "signal": "NEUTRAL", "prob_up": 0.5057442797900389, "actual_result": null, "metadata": {}}

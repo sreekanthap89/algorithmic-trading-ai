@@ -97,7 +97,12 @@ def buy_asset(symbol: str, quantity: float, price: float) -> tuple[bool, str]:
         state["positions"][symbol] = pos
         
     save_portfolio(state)
-    return True, f"Successfully executed BUY for {quantity} {symbol} at ${price:,.2f}."
+    try:
+        from config.market_catalog import format_price
+        p_str = format_price(price, symbol)
+    except Exception:
+        p_str = f"${price:,.4f}" if price < 10 else f"${price:,.2f}"
+    return True, f"Successfully executed BUY for {quantity:g} {symbol} at {p_str}."
 
 def sell_asset(symbol: str, quantity: float, price: float) -> tuple[bool, str]:
     """Executes a SELL order (Open Short or Close Long)."""
@@ -162,7 +167,12 @@ def sell_asset(symbol: str, quantity: float, price: float) -> tuple[bool, str]:
         state["positions"][symbol] = pos
         
     save_portfolio(state)
-    return True, f"Successfully executed SELL for {quantity} {symbol} at ${price:,.2f}."
+    try:
+        from config.market_catalog import format_price
+        p_str = format_price(price, symbol)
+    except Exception:
+        p_str = f"${price:,.4f}" if price < 10 else f"${price:,.2f}"
+    return True, f"Successfully executed SELL for {quantity:g} {symbol} at {p_str}."
 
 def get_portfolio_summary(current_prices: dict) -> dict:
     state = load_portfolio()

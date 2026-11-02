@@ -229,7 +229,15 @@ class Backtest:
             return ""
         
         if filename is None:
-            filename = f"{self.symbol}_{self.interval}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            safe_sym = (
+                str(self.symbol)
+                .replace("=", "_")
+                .replace("^", "_")
+                .replace("/", "_")
+                .replace(":", "_")
+                .replace("\\", "_")
+            )
+            filename = f"{safe_sym}_{self.interval}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         
         filepath = os.path.join(BACKTEST_DIR, filename)
         

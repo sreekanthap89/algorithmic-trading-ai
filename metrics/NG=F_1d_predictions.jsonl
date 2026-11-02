@@ -1,0 +1,4 @@
+{"timestamp": "2026-11-01T01:56:20.089921", "signal": "BUY (UP)", "prob_up": 0.7087926864624023, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T02:09:41.817017", "signal": "BUY (UP)", "prob_up": 0.930966854095459, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T02:52:13.641632", "signal": "SELL (DOWN)", "prob_up": 0.2806537146689325, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T03:04:44.511524", "signal": "SELL (DOWN)", "prob_up": 0.2806537146689325, "actual_result": null, "metadata": {}}

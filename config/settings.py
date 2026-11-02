@@ -20,9 +20,12 @@ for dir_path in [DATA_DIR, MODELS_DIR, LOGS_DIR, METRICS_DIR, BACKTEST_DIR]:
 
 # ==================== DATA CONFIGURATION ====================
 DATA_SOURCES = {
-    "1d": {"period": "2y", "interval": "1d"},
-    "1h": {"period": "1mo", "interval": "1h"},
-    "5m": {"period": "5d", "interval": "5m"}
+    "1d": {"period": "max", "interval": "1d"},
+    "1h": {"period": "730d", "interval": "1h"},
+    "5m": {"period": "60d", "interval": "5m"},
+    "15m": {"period": "60d", "interval": "15m"},
+    "30m": {"period": "60d", "interval": "30m"},
+    "1m": {"period": "7d", "interval": "1m"},
 }
 
 # ==================== MODEL CONFIGURATION ====================

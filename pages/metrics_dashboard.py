@@ -165,9 +165,17 @@ class MetricsDashboard:
         """Render feature importance analysis."""
         st.subheader(f"🎯 Feature Importance - {symbol} ({interval})")
         
+        safe_sym = (
+            str(symbol)
+            .replace("=", "_")
+            .replace("^", "_")
+            .replace("/", "_")
+            .replace(":", "_")
+            .replace("\\", "_")
+        )
         importance_file = os.path.join(
             METRICS_DIR,
-            f"{symbol}_{interval}_feature_importance.json"
+            f"{safe_sym}_{interval}_feature_importance.json"
         )
         
         if not os.path.exists(importance_file):

@@ -68,9 +68,16 @@ class PredictionTracker:
         self.symbol = symbol
         self.interval = interval
         self.predictions_list = []
+        safe_sym = (
+            symbol.replace("=", "_")
+            .replace("^", "_")
+            .replace("/", "_")
+            .replace(":", "_")
+            .replace("\\", "_")
+        )
         self.tracking_file = os.path.join(
             METRICS_DIR, 
-            f"{symbol}_{interval}_predictions.jsonl"
+            f"{safe_sym}_{interval}_predictions.jsonl"
         )
     
     def log_prediction(self, 

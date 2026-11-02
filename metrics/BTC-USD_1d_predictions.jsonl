@@ -56,3 +56,8 @@
 {"timestamp": "2026-10-04T19:35:13.062920", "signal": "BUY (UP)", "prob_up": 0.6042389273643494, "actual_result": null, "metadata": {}}
 {"timestamp": "2026-10-04T19:35:54.438375", "signal": "BUY (UP)", "prob_up": 0.6042389273643494, "actual_result": null, "metadata": {}}
 {"timestamp": "2026-11-01T01:00:41.004139", "signal": "NEUTRAL", "prob_up": 0.4719037413597107, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T01:34:23.695269", "signal": "NEUTRAL", "prob_up": 0.4815353751182556, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T01:36:38.043187", "signal": "NEUTRAL", "prob_up": 0.47492510080337524, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T01:37:18.246932", "signal": "NEUTRAL", "prob_up": 0.49140432476997375, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T02:09:54.572117", "signal": "BUY (UP)", "prob_up": 0.9005053639411926, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-01T02:52:17.526757", "signal": "BUY (UP)", "prob_up": 0.7650648097664153, "actual_result": null, "metadata": {}}

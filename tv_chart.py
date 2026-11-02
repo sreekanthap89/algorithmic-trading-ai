@@ -215,12 +215,16 @@ def add_patterns(spec: ChartSpec, detected: Dict[str, Dict], last_time: Any) -> 
         spec.polyline([X, D], "#FFA726", 1.4, DOTTED)
         spec.hline(X[0], last_time, p["stop"], "#EF5350", 1.5, DASHED, "Bat Stop-Loss")
         spec.hline(X[0], last_time, p["target"], "#26A69A", 1.5, DASHED, "Bat Target")
+        d_label = (
+            f"D Entry · XD {p['ratios']['XD_XA']:.3f}"
+            if p.get("bars_ago", 999) <= 3
+            else f"D · XD {p['ratios']['XD_XA']:.3f}"
+        )
         for lbl, pt, pos, col in [("X", X, "atPriceTop", "#F48FB1"),
                                   ("A", A, "atPriceBottom", "#CE93D8"),
                                   ("B", B, "atPriceTop", "#90CAF9"),
                                   ("C", C, "atPriceBottom", "#A5D6A7"),
-                                  (f"D Entry · XD {p['ratios']['XD_XA']:.3f}", D,
-                                   "atPriceTop", "#FFCC02")]:
+                                  (d_label, D, "atPriceTop", "#FFCC02")]:
             spec.marker(pt[0], pt[1], lbl, col, "circle", pos)
 
     if "falling_wedge" in detected:
@@ -230,7 +234,28 @@ def add_patterns(spec: ChartSpec, detected: Dict[str, Dict], last_time: Any) -> 
         spec.polyline([l1, l2, apex], "#26A69A", 2)
         spec.hline(h1[0], apex[0], p["target"], "#FFD700", 1.5, DASHED, "FW Target")
         spec.hline(l1[0], apex[0], p["stop"], "#EF5350", 1.2, DOTTED, "FW Stop")
-        spec.marker(apex[0], apex[1], "Position Opening", "#00FF7F", "arrowUp", "atPriceBottom")
+        if p.get("bars_ago", 999) <= 3:
+            spec.marker(apex[0], apex[1], "Position Opening", "#00FF7F", "arrowUp", "atPriceBottom")
+        else:
+            spec.marker(apex[0], apex[1], "FW Apex", "#26A69A", "circle", "atPriceBottom")
+
+
+def add_deal_markers(spec: ChartSpec, deal_signals: Dict[str, Any]) -> None:
+    """
+    Appends AI Buy/Sell Entry and Deal Close (TP / SL) markers to ChartSpec.
+    """
+    if not deal_signals or not isinstance(deal_signals, dict):
+        return
+    markers = deal_signals.get("markers", [])
+    for m in markers:
+        t = m.get("time")
+        if t in spec._candle_times:
+            existing = any(
+                em.get("time") == t and em.get("position") == m.get("position")
+                for em in spec.markers
+            )
+            if not existing:
+                spec.markers.append(m)
 
 
 # ─────────────────────────────────────────────────────────────
@@ -516,10 +541,18 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
         : { axisPressedMouseMove: { time: true, price: !lockY } },
     });
 
+    // ── Adaptive price precision for Forex (1.0845), Natural Gas (2.645), Oil/Silver (32.45) & Crypto/Gold ──
+    const lastCandle = (SPEC.candles && SPEC.candles.length) ? SPEC.candles[SPEC.candles.length - 1] : null;
+    const refPrice = lastCandle ? Math.abs(Number(lastCandle.close) || 100) : 100;
+    const mainDecimals = refPrice < 1 ? 5 : (refPrice < 20 ? 4 : (refPrice < 200 ? 3 : 2));
+    const mainMinMove = Number(Math.pow(10, -mainDecimals).toFixed(mainDecimals));
+    const mainPriceFmt = { type: 'price', precision: mainDecimals, minMove: mainMinMove };
+
     // ── Main candlesticks ──
     const candles = chart.addSeries(LWC.CandlestickSeries, {
       upColor: SPEC.up, downColor: SPEC.down, borderUpColor: SPEC.up, borderDownColor: SPEC.down,
       wickUpColor: SPEC.up, wickDownColor: SPEC.down, title: '',
+      priceFormat: mainPriceFmt,
     });
     candles.setData(SPEC.candles);
 
@@ -531,6 +564,7 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
           topLineColor: z.line, bottomLineColor: z.line, lineWidth: 1, lineStyle: 1,
           topFillColor1: z.fill, topFillColor2: z.fill, bottomFillColor1: z.fill, bottomFillColor2: z.fill,
           lastValueVisible: false, priceLineVisible: false, crosshairMarkerVisible: false,
+          priceFormat: mainPriceFmt,
         });
         s.setData(z.data);
       } catch (e) { console.warn('zone', e); }
@@ -541,10 +575,12 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
     const legendSeries = [];
     (SPEC.lines || []).forEach(l => {
       try {
+        const isMainPane = !l.pane || l.pane === 0;
         const s = chart.addSeries(LWC.LineSeries, {
           color: l.color, lineWidth: l.width, lineStyle: l.style, title: l.lastValue ? l.title : '',
           lastValueVisible: !!l.lastValue, priceLineVisible: false,
           crosshairMarkerVisible: !!l.legend, pointMarkersVisible: false,
+          priceFormat: isMainPane ? mainPriceFmt : { type: 'price', precision: 2, minMove: 0.01 },
         }, l.pane || 0);
         s.setData(l.data);
         (l.priceLines || []).forEach(p => s.createPriceLine(p));
@@ -569,9 +605,15 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
       axisLabelVisible: true, title: p.title,
     }));
 
-    // ── Pattern markers ──
+    // ── Pattern & AI Trade Deal Markers ──
     if ((SPEC.markers || []).length) {
-      try { LWC.createSeriesMarkers(candles, SPEC.markers); } catch (e) { console.warn('markers', e); }
+      try {
+        if (typeof candles.setMarkers === 'function') {
+          candles.setMarkers(SPEC.markers);
+        } else if (typeof LWC !== 'undefined' && typeof LWC.createSeriesMarkers === 'function') {
+          LWC.createSeriesMarkers(candles, SPEC.markers);
+        }
+      } catch (e) { console.warn('markers error', e); }
     }
 
     // ── Pane sizing ──
@@ -579,7 +621,7 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
 
     // ── Legend (OHLC on crosshair) ──
     const legend = document.getElementById('legend');
-    const fmt = v => (v == null || isNaN(v)) ? '—' : Number(v).toLocaleString(undefined, { maximumFractionDigits: v < 1 ? 6 : 2, minimumFractionDigits: v < 1 ? 4 : 2 });
+    const fmt = v => (v == null || isNaN(v)) ? '—' : Number(v).toLocaleString(undefined, { maximumFractionDigits: mainDecimals, minimumFractionDigits: mainDecimals });
     const last = SPEC.candles[SPEC.candles.length - 1];
     function renderLegend(bar, vals) {
       bar = bar || last;

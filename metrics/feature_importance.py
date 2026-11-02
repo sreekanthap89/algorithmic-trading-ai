@@ -20,9 +20,16 @@ class FeatureImportanceAnalyzer:
     def __init__(self, symbol: str, interval: str):
         self.symbol = symbol
         self.interval = interval
+        safe_sym = (
+            symbol.replace("=", "_")
+            .replace("^", "_")
+            .replace("/", "_")
+            .replace(":", "_")
+            .replace("\\", "_")
+        )
         self.importance_file = os.path.join(
             METRICS_DIR,
-            f"{symbol}_{interval}_feature_importance.json"
+            f"{safe_sym}_{interval}_feature_importance.json"
         )
     
     @staticmethod

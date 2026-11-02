@@ -61,3 +61,8 @@ Traceback (most recent call last):
     file.write(out)  # type: ignore
     ^^^^^^^^^^^^^^^
 OSError: [Errno 5] Input/output error
+2026-11-02 19:04:07,121 - yfinance - ERROR - [quote.py:664] - _fetch() - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: MCX INDIA NATURALGAS"}}}
+2026-11-02 19:04:08,614 - yfinance - ERROR - [history.py:372] - history() - $MCX INDIA NATURALGAS: No data found, symbol may be delisted
+2026-11-02 19:04:41,549 - yfinance - ERROR - [quote.py:664] - _fetch() - HTTP Error 404: {"quoteSummary":{"result":null,"error":{"code":"Not Found","description":"Quote not found for symbol: NATGASMINI FUT DEC 2026"}}}
+2026-11-02 19:04:42,249 - yfinance - ERROR - [history.py:372] - history() - $NATGASMINI FUT DEC 2026: No data found, symbol may be delisted
+2026-11-02 19:34:35,312 - yfinance - ERROR - [history.py:372] - history() - $NG=F: possibly delisted; no price data found  (5m 2026-10-31 -> 2026-11-02 09:04:05-05:00)

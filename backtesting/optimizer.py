@@ -111,7 +111,15 @@ class ParameterOptimizer:
         
         if filename is None:
             from datetime import datetime
-            filename = f"optimization_{self.symbol}_{self.interval}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            safe_sym = (
+                str(self.symbol)
+                .replace("=", "_")
+                .replace("^", "_")
+                .replace("/", "_")
+                .replace(":", "_")
+                .replace("\\", "_")
+            )
+            filename = f"optimization_{safe_sym}_{self.interval}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
         
         filepath = os.path.join(BACKTEST_DIR, filename)
         df = self.get_results_dataframe()

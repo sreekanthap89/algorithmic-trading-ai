@@ -95,7 +95,21 @@ def detect_wolfe_wave(df: pd.DataFrame, lookback: int = 150) -> Optional[Dict]:
                 # P5 should sit near the line P1→P3 extended
                 y5e  = _ly(i1, y1, i3, y3, i5)
                 err  = abs(y5 - y5e) / (abs(y3 - y1) + 1e-9)
-                if err > 0.35 or err >= best_err:
+                bars_ago = (n - 1) - i5
+                if bars_ago > 20:
+                    continue
+                # Invalidate if price breached stop or reached target after P5
+                if i5 < n - 1:
+                    post_hi = hi[i5 + 1:]
+                    post_lo = lo[i5 + 1:]
+                    if len(post_lo) > 0 and post_lo.min() <= y5 * 0.995:
+                        continue  # Stopped out
+                    if len(post_hi) > 0 and post_hi.max() >= y6:
+                        continue  # Target already reached
+
+                recency_pen = bars_ago / max(n, 1) * 0.25
+                total_err = err + recency_pen
+                if err > 0.35 or total_err >= best_err:
                     continue
 
                 # P6 on ray P1→P4 extended past P5
@@ -103,11 +117,17 @@ def detect_wolfe_wave(df: pd.DataFrame, lookback: int = 150) -> Optional[Dict]:
                 i6   = min(i5 + step, n - 1)
                 y6   = _ly(i1, y1, i4, y4, i6)
 
-                best_err = err
+                best_err = total_err
+                conf = float(np.clip((1.0 - err / 0.35) * np.exp(-bars_ago / 20.0), 0.0, 0.95))
+                if conf < 0.20:
+                    continue
                 res = dict(
                     p1=(dt[i1], y1), p2=(dt[i2], y2),
                     p3=(dt[i3], y3), p4=(dt[i4], y4),
                     p5=(dt[i5], y5), p6=(dt[i6], y6),
+                    bars_ago=int(bars_ago),
+                    pattern_confidence=round(conf, 4),
+                    bias="BULLISH",
                 )
     return res
 
@@ -228,6 +248,22 @@ def detect_cup_handle(df: pd.DataFrame, lookback: int = 150) -> Optional[Dict]:
 
     target_p = support_p - cup_h
     cur_i    = n - 1
+    bars_ago = int(cur_i - ht_i)
+    if bars_ago > 20:
+        return None
+    # Invalidate if price breached stop or hit target after handle top
+    if ht_i < n - 1:
+        post_hi = hi[ht_i + 1:]
+        post_lo = lo[ht_i + 1:]
+        if len(post_hi) > 0 and post_hi.max() >= cup_p:
+            return None  # Stopped out above cup top
+        if len(post_lo) > 0 and post_lo.min() <= target_p:
+            return None  # Target already reached
+
+    rim_sym  = 1.0 - min(1.0, abs(lr_p - rm_p) / max(cup_h, 1e-9))
+    conf     = float(np.clip(0.65 * rim_sym * np.exp(-bars_ago / 20.0), 0.0, 0.92))
+    if conf < 0.20:
+        return None
 
     return dict(
         left_rim  = (dt[lr_i],  lr_p),
@@ -238,6 +274,9 @@ def detect_cup_handle(df: pd.DataFrame, lookback: int = 150) -> Optional[Dict]:
         support   = support_p,
         target    = target_p,
         cup_h     = cup_h,
+        bars_ago  = bars_ago,
+        pattern_confidence = round(conf, 4),
+        bias      = "BEARISH",
     )
 
 
@@ -350,17 +389,38 @@ def detect_bearish_bat(df: pd.DataFrame, lookback: int = 250) -> Optional[Dict]:
                         if not 0.8 <= cd_r <= 4.0:  # Very relaxed
                             continue
 
+                        bars_ago = (n - 1) - di
+                        if bars_ago > 20:
+                            continue
+                        stop = yx * 1.003
+                        # Invalidate if price breached stop-loss or hit target after Point D
+                        if di < n - 1:
+                            post_hi = hi[di + 1:]
+                            post_lo = lo[di + 1:]
+                            if len(post_hi) > 0 and post_hi.max() >= stop:
+                                continue  # Pattern was STOPPED OUT in history!
+                            if len(post_lo) > 0 and post_lo.min() <= ya:
+                                continue  # Target already reached!
+
                         err = (abs(xd_r - 0.886) * 2
                                + abs(ab_r  - 0.382)
-                               + abs(cd_r  - 1.618) * 0.2)
+                               + abs(cd_r  - 1.618) * 0.2
+                               + (bars_ago / max(n, 1)) * 0.35)
                         if err < best_err:
                             best_err = err
+                            fib_acc = max(0.1, 1.0 - abs(xd_r - 0.886) * 2.5)
+                            conf = float(np.clip(fib_acc * np.exp(-bars_ago / 20.0), 0.0, 0.95))
+                            if conf < 0.20:
+                                continue
                             res = dict(
                                 X=(dt[xi], yx), A=(dt[ai], ya),
                                 B=(dt[bi], yb), C=(dt[ci], yc),
                                 D=(dt[di], yd),
                                 target = ya,
-                                stop   = yx * 1.003,
+                                stop   = stop,
+                                bars_ago = int(bars_ago),
+                                pattern_confidence = round(conf, 4),
+                                bias = "BEARISH",
                                 ratios = dict(
                                     AB_XA = round(ab_r,  3),
                                     BC_AB = round(bc_r,  3),
@@ -507,8 +567,8 @@ def detect_falling_wedge(df: pd.DataFrame, lookback: int = 200) -> Optional[Dict
             if abs(denom) < 1e-10:
                 continue
             apex_x = (b_lo - b_up) / denom
-            # Require rightmost point < 40% future
-            if apex_x <= h2i or apex_x > n * 0.40 or apex_x < 0:
+            # Require rightmost point < 40% future (fixed from 0.40 typo to 1.40)
+            if apex_x <= h2i or apex_x > n * 1.40 or apex_x < 0:
                 continue
             apex_y = sl_up * apex_x + b_up
             
@@ -524,15 +584,34 @@ def detect_falling_wedge(df: pd.DataFrame, lookback: int = 200) -> Optional[Dict
             target  = bk_p + breakout_height * 0.8
             stop    = yl2 * 0.998
 
-            score = abs(sl_up / sl_lo - 1.8)    # prefer slope ratio ~1.8
+            bars_ago = (n - 1) - max(h2i, l2i)
+            if bars_ago > 20:
+                continue
+            # Invalidate if price breached stop or reached target after breakout
+            breakout_bar = max(h2i, l2i)
+            if breakout_bar < n - 1:
+                post_hi = hi[breakout_bar + 1:]
+                post_lo = lo[breakout_bar + 1:]
+                if len(post_lo) > 0 and post_lo.min() <= stop:
+                    continue  # Stopped out below wedge low
+                if len(post_hi) > 0 and post_hi.max() >= target:
+                    continue  # Target already reached!
+
+            score = abs(sl_up / sl_lo - 1.8) + (bars_ago / max(n, 1)) * 0.4
             if score < best_score:
                 best_score = score
+                conf = float(np.clip((1.0 - min(0.8, abs(sl_up / sl_lo - 1.8) * 0.3)) * np.exp(-bars_ago / 20.0), 0.0, 0.94))
+                if conf < 0.20:
+                    continue
                 res = dict(
                     h1=(dt[h1i], yh1), h2=(dt[h2i], yh2),
                     l1=(dt[l1i], yl1), l2=(dt[l2i], yl2),
                     apex=(dt[min(int(apex_x), n - 1)], apex_y),
                     target=target,
                     stop=stop,
+                    bars_ago=int(bars_ago),
+                    pattern_confidence=round(conf, 4),
+                    bias="BULLISH",
                 )
     return res
 

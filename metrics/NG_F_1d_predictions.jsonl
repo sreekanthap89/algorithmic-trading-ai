@@ -1,0 +1,18 @@
+{"timestamp": "2026-11-02T18:20:48.993101", "signal": "SELL (DOWN)", "prob_up": 0.31072540003488297, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T18:22:58.257373", "signal": "SELL (DOWN)", "prob_up": 0.3106983357190617, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T19:02:06.992551", "signal": "SELL (DOWN)", "prob_up": 0.3064359296051642, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T20:57:28.620528", "signal": "SELL (DOWN)", "prob_up": 0.307781315032388, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:24:49.973418", "signal": "SELL (DOWN)", "prob_up": 0.3118583546502907, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:45:37.016417", "signal": "SELL (DOWN)", "prob_up": 0.31171357959125406, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:46:42.171305", "signal": "SELL (DOWN)", "prob_up": 0.3100758389346789, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:51:35.091479", "signal": "NEUTRAL", "prob_up": 0.5022438107696559, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T21:58:40.192371", "signal": "NEUTRAL", "prob_up": 0.502384292986306, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:29:19.295241", "signal": "NEUTRAL", "prob_up": 0.5197541390192083, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:44:21.954245", "signal": "NEUTRAL", "prob_up": 0.5197958560825285, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:51:33.886241", "signal": "NEUTRAL", "prob_up": 0.5197075137811706, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:51:51.563349", "signal": "NEUTRAL", "prob_up": 0.5197075137811706, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:52:12.197349", "signal": "NEUTRAL", "prob_up": 0.5192207016897192, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:53:58.829783", "signal": "NEUTRAL", "prob_up": 0.5194405149651655, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:56:41.728139", "signal": "NEUTRAL", "prob_up": 0.5196127832251404, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:57:30.554728", "signal": "NEUTRAL", "prob_up": 0.5195640522437014, "actual_result": null, "metadata": {}}
+{"timestamp": "2026-11-02T22:58:46.773437", "signal": "NEUTRAL", "prob_up": 0.5195640522437014, "actual_result": null, "metadata": {}}
