@@ -1,6 +1,7 @@
 import pandas as pd
 import ta
 import numpy as np
+from typing import Optional, Dict, List, Union, Tuple
 
 # Canonical list of 100% STATIONARY, SCALE-INVARIANT features consumed by ML models.
 # Raw price-level columns (SMA_20, SMA_50, SMA_200, EMA_12, EMA_26, BB_High, BB_Low,
@@ -16,15 +17,20 @@ LIVE_FEATURE_COLS = [
     'Dist_SMA20', 'Dist_SMA50', 'Dist_EMA12',
     # Volatility & Bollinger/Keltner Position (stationary)
     'BB_Width', 'BB_pctB', 'ATR_Pct', 'GK_Vol', 'YZ_Vol', 'Parkinson_Vol', 'Vol_Regime_Ratio', 'Squeeze_Ratio',
+    'Realized_Vol_20',
     # Multi-Horizon ATR-Normalized Momentum Term Structure & Trend Gradient
     'Return', 'Log_Return', 'Mom_3_ATR', 'Mom_5_ATR', 'Mom_10_ATR', 'Mom_20_ATR', 'EMA20_Slope_Norm',
     # Return Autocorrelation & Memory Persistence
     'Autocorr_1', 'Autocorr_2', 'FracDiff_Close', 'Hurst_20', 'Efficiency_Ratio',
     # Higher-Order Return Distribution & Tail Statistics
     'Return_Vol_10', 'Return_Skew_20', 'Return_Kurt_20', 'Z_Score_Return',
-    # Microstructure Order Flow, Wick Pressure & Volume Z-Scores (strictly causal)
-    'CLV', 'Wick_Imbalance', 'Order_Flow_Z', 'Volume_Z', 'Streak_Length',
+    # Microstructure Order Flow, Candle Log-Ratios & Volume Z-Scores (TimesFM Intraday Blueprint)
+    'CLV', 'Wick_Imbalance', 'Order_Flow_Z', 'Volume_Z', 'Diurnal_Volume_Ratio', 'Streak_Length',
+    'Log_Body_Ratio', 'Log_Upper_Shadow', 'Log_Lower_Shadow',
     'VWAP_Dev', 'RSI_Divergence', 'Hawkes_Intensity', 'Pair_RSI_MACD_Lift',
+    'Exit_Exhaustion_Score',
+    # Module 11 (PCA Denoised Latent Factor Components)
+    'PCA_Factor_1', 'PCA_Factor_2', 'PCA_Factor_3',
     # Cyclical Session & Weekly Seasonality
     'Hour_Sin', 'Hour_Cos', 'Day_Sin', 'Day_Cos',
 ]
@@ -71,23 +77,28 @@ def _rolling_hurst(close: pd.Series, window: int = 20) -> pd.Series:
     return hurst.clip(0.15, 0.85).fillna(0.50)
 
 
-def _triple_barrier_labels(
+def _triple_barrier_labels_with_weights(
     df: pd.DataFrame,
-    pt_mult: float = 0.85,
+    pt_mult: float = 1.15,
     sl_mult: float = 0.85,
     max_holding: int = None,
-) -> pd.Series:
+) -> tuple[pd.Series, pd.Series]:
     """
-    Volatility-Adaptive Multi-Horizon Triple-Barrier Labeling (López de Prado, AFML Ch. 3).
+    Volatility-Adaptive Multi-Horizon Triple-Barrier Labeling + Sample Attribution Weights
+    (López de Prado, AFML Ch. 3 & Ch. 4).
     Automatically adapts holding horizon to candle timeframe:
       - 6 bars for intraday (30 min for 5m, 1.5 hr for 15m) to allow trades to clear the spread.
       - 4 bars for daily/weekly swing trades.
-    Checks which barrier is touched first using intrabar High/Low and Close trajectory.
-    If neither horizontal barrier is hit within `max_holding` bars, uses the volatility-gated
-    forward cumulative return over the horizon (with a noise deadzone so flat chop is excluded).
+    Improvements:
+      1. Asymmetric Reward-to-Risk awareness (pt_mult=1.15 vs sl_mult=0.85) + intrabar Open-proximity
+         resolution when both barriers are breached in the same bar.
+      2. Computes `Target_Weight` proportional to realized ATR-normalized excursion and inverse
+         time-to-barrier so clean, fast barrier touches carry higher training weight than noisy
+         vertical-barrier drift.
     Strictly NaN on the final `max_holding` bars to prevent any lookahead leakage at inference edge.
     """
     close = df['Close'].values
+    open_p = df['Open'].values if 'Open' in df.columns else close
     high = df['High'].values
     low = df['Low'].values
     atr = df['ATR'].ffill().bfill().values
@@ -103,8 +114,9 @@ def _triple_barrier_labels(
         max_holding = 6 if is_intraday else 4
 
     labels = np.full(n, np.nan, dtype=np.float64)
+    weights = np.ones(n, dtype=np.float64)
     if n <= max_holding + 5:
-        return pd.Series(labels, index=df.index)
+        return pd.Series(labels, index=df.index), pd.Series(weights, index=df.index)
 
     # Adapt barrier width for shorter datasets so enough training rows are labeled
     deadzone_mult = 0.12 if n >= 250 else 0.06
@@ -116,29 +128,55 @@ def _triple_barrier_labels(
         lower_b = c0 - sl_mult * atr_t
 
         hit_label = np.nan
+        hit_bar = max_holding
+        realized_atr_move = 0.0
+
         for h in range(1, max_holding + 1):
             up_hit = high[t + h] >= upper_b
             dn_hit = low[t + h] <= lower_b
             if up_hit and not dn_hit:
                 hit_label = 1.0
+                hit_bar = h
+                realized_atr_move = pt_mult
                 break
             elif dn_hit and not up_hit:
                 hit_label = 0.0
+                hit_bar = h
+                realized_atr_move = sl_mult
                 break
             elif up_hit and dn_hit:
-                # Both touched in same bar: resolve by close direction of that bar
-                hit_label = 1.0 if close[t + h] >= c0 else 0.0
+                # Both touched in same bar: check whether Open was closer to upper or lower barrier
+                # combined with Close Location Value (CLV)
+                o_h = open_p[t + h]
+                dist_up = abs(upper_b - o_h)
+                dist_dn = abs(o_h - lower_b)
+                if close[t + h] > o_h and dist_up <= dist_dn * 1.15:
+                    hit_label = 1.0
+                elif close[t + h] < o_h and dist_dn <= dist_up * 1.15:
+                    hit_label = 0.0
+                else:
+                    hit_label = 1.0 if close[t + h] >= c0 else 0.0
+                hit_bar = h
+                realized_atr_move = 0.85
                 break
 
         if np.isnan(hit_label):
             # Vertical barrier reached: evaluate forward return with noise filter
             fwd_move = close[t + max_holding] - c0
+            abs_atr_move = abs(fwd_move) / atr_t
             if fwd_move > deadzone_mult * atr_t:
                 hit_label = 1.0
+                realized_atr_move = abs_atr_move
             elif fwd_move < -deadzone_mult * atr_t:
                 hit_label = 0.0
+                realized_atr_move = abs_atr_move
 
         labels[t] = hit_label
+        if not np.isnan(hit_label):
+            # Higher weight for clean horizontal barrier hits and larger ATR excursions
+            speed_bonus = 1.0 + 0.35 * ((max_holding - hit_bar + 1) / max(max_holding, 1))
+            mag_weight = float(np.clip(realized_atr_move / max(sl_mult, 0.5), 0.35, 2.25))
+            weights[t] = mag_weight * speed_bonus
 
     # Fallback if ultra-low volatility left too few labels
     valid_count = int(np.sum(~np.isnan(labels)))
@@ -148,8 +186,22 @@ def _triple_barrier_labels(
                 diff = close[t + 1] - close[t]
                 if abs(diff) > 1e-9:
                     labels[t] = 1.0 if diff > 0 else 0.0
+                    weights[t] = 0.5
 
-    return pd.Series(labels, index=df.index)
+    return pd.Series(labels, index=df.index), pd.Series(weights, index=df.index)
+
+
+def _triple_barrier_labels(
+    df: pd.DataFrame,
+    pt_mult: float = 0.85,
+    sl_mult: float = 0.85,
+    max_holding: int = None,
+) -> pd.Series:
+    """Backward-compatible wrapper returning the Triple-Barrier Target series."""
+    labels, _ = _triple_barrier_labels_with_weights(
+        df, pt_mult=pt_mult, sl_mult=sl_mult, max_holding=max_holding
+    )
+    return labels
 
 
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -302,6 +354,18 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     lower_wick = (np.minimum(open_p, close) - low).clip(lower=0.0)
     df['Wick_Imbalance'] = ((lower_wick - upper_wick) / atr_safe).clip(-3.0, 3.0).fillna(0.0)
 
+    # Candle Microstructure Log-Ratios (TimesFM Intraday Blueprint, arXiv:2412.09880 / Google TimesFM-3)
+    # Strictly dimensionless, scale-invariant, immune to overnight jump distortion
+    c_safe = close.clip(lower=1e-8)
+    o_safe = open_p.clip(lower=1e-8)
+    h_safe = high.clip(lower=1e-8)
+    l_safe = low.clip(lower=1e-8)
+    max_oc = np.maximum(o_safe, c_safe)
+    min_oc = np.minimum(o_safe, c_safe)
+    df['Log_Body_Ratio'] = np.log(c_safe / o_safe).clip(-0.5, 0.5).fillna(0.0)
+    df['Log_Upper_Shadow'] = np.log(h_safe / max_oc).clip(0.0, 0.5).fillna(0.0)
+    df['Log_Lower_Shadow'] = np.log(min_oc / l_safe).clip(0.0, 0.5).fillna(0.0)
+
     vol_mean = volume.rolling(20, min_periods=5).mean()
     vol_std = volume.rolling(20, min_periods=5).std().replace(0, 1e-9)
     df['Volume_Z'] = ((volume - vol_mean) / vol_std).clip(-5.0, 5.0).fillna(0.0)
@@ -309,6 +373,22 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     sf_mean = signed_flow.rolling(20, min_periods=5).mean()
     sf_std = signed_flow.rolling(20, min_periods=5).std().replace(0, 1e-9)
     df['Order_Flow_Z'] = ((signed_flow - sf_mean) / sf_std).clip(-5.0, 5.0).fillna(0.0)
+
+    # Diurnal Relative Volume: removes deterministic U-shaped intraday volume smile
+    # Compares current bar volume to rolling causal median for the same minute-of-day
+    try:
+        dt_idx_s = pd.Series(pd.to_datetime(df.index), index=df.index)
+        min_of_day = dt_idx_s.dt.hour * 60 + dt_idx_s.dt.minute
+        diurnal_med = df.groupby(min_of_day)['Volume'].transform(lambda s: s.rolling(30, min_periods=3).median())
+        diurnal_med = diurnal_med.replace(0, np.nan).fillna(df['Volume'].rolling(20, min_periods=5).median())
+        df['Diurnal_Volume_Ratio'] = (df['Volume'] / diurnal_med.replace(0, 1.0)).clip(0.05, 15.0).fillna(1.0)
+    except Exception:
+        df['Diurnal_Volume_Ratio'] = 1.0
+
+    # Intraday Realized Volatility (RV_20): high-persistence second-moment target
+    # Autocorrelated volatility clustering matches TimesFM foundation pretraining
+    ret_sq = (_ret.fillna(0.0) ** 2)
+    df['Realized_Vol_20'] = np.sqrt(ret_sq.rolling(20, min_periods=5).mean()).fillna(0.0)
 
     # --- 9. Consecutive-Direction Streak Length ---
     _direction = np.sign(_ret.fillna(0.0))
@@ -327,9 +407,21 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
     df['Pair_RSI_MACD_Lift'] = (df['RSI_Z'] * _macd_z.fillna(0.0)).clip(-10.0, 10.0)
     df['Hawkes_Intensity'] = _hawkes_intensity(_ret, alpha=0.4, beta=0.2)
 
-    # --- 11. VWAP + RSI Divergence ---
+    # --- 11. VWAP + RSI Divergence + Microstructure Exit Exhaustion Score ---
     df = add_vwap(df)
     df = add_rsi_divergence(df)
+
+    # Strictly causal signed Exit_Exhaustion_Score in [-1, +1]:
+    #   > +0.45 signals Bullish Trend Exhaustion / Top Supply Rejection (Close LONG deal early)
+    #   < -0.45 signals Bearish Trend Exhaustion / Bottom Demand Absorption (Close SHORT deal early)
+    _bb_ext = (df['BB_pctB'].fillna(0.5) - 0.5) * 2.0
+    _rsi_ext = (df['RSI'].fillna(50.0) - 50.0) / 50.0
+    _wick_rej = -df['Wick_Imbalance'].fillna(0.0) / 2.0   # + when upper wick >> lower wick
+    _clv_rev = -df['CLV'].fillna(0.0)                     # + when closing near bar low after rally
+    _div_sig = -df['RSI_Divergence'].fillna(0.0)          # +1 on bearish divergence, -1 on bullish
+    df['Exit_Exhaustion_Score'] = np.tanh(
+        0.30 * _bb_ext + 0.25 * _rsi_ext + 0.20 * _wick_rej + 0.15 * _clv_rev + 0.10 * _div_sig
+    ).clip(-1.0, 1.0).fillna(0.0)
 
     # --- 12. Cyclical Session & Weekly Seasonality ---
     try:
@@ -346,17 +438,103 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
         df['Day_Sin'] = 0.0
         df['Day_Cos'] = 1.0
 
+    # --- 13. Module 11: PCA Orthogonal Feature Denoising ---
+    df = add_pca_orthogonal_features(df, n_components=3)
+
     # Clean infinities
     for col in LIVE_FEATURE_COLS:
         if col in df.columns:
             df[col] = df[col].replace([np.inf, -np.inf], np.nan)
 
-    # --- 13. Volatility-Adaptive Multi-Horizon Triple-Barrier Target ---
-    df['Target'] = _triple_barrier_labels(df, pt_mult=0.85, sl_mult=0.85)
+    # --- 14. Volatility-Adaptive Multi-Horizon Triple-Barrier Target & Attribution Weights ---
+    df['Target'], df['Target_Weight'] = _triple_barrier_labels_with_weights(df, pt_mult=0.85, sl_mult=0.85)
 
     return df
 
+
+def add_pca_orthogonal_features(df: pd.DataFrame, n_components: int = 3) -> pd.DataFrame:
+    """
+    Module 11 (PCA Dimensionality Reduction):
+    Transforms collinear momentum, volatility, and trend indicators into orthogonal
+    principal components using SVD/Eigenvalue decomposition.
+    Adds 'PCA_Factor_1' (Trend/Momentum), 'PCA_Factor_2' (Volatility/Spread),
+    'PCA_Factor_3' (Mean-Reversion) to insulate models from multicollinearity.
+    """
+    feature_group = [
+        'RSI_Z', 'MACD_Norm', 'MACD_Diff_Norm', 'Mom_3_ATR', 'Mom_5_ATR', 'Mom_10_ATR',
+        'BB_Width', 'ATR_Pct', 'GK_Vol', 'Efficiency_Ratio', 'FracDiff_Close'
+    ]
+    avail = [c for c in feature_group if c in df.columns]
+    if len(avail) < 3 or len(df) < 15:
+        for i in range(1, n_components + 1):
+            df[f'PCA_Factor_{i}'] = 0.0
+        return df
+
+    from sklearn.decomposition import PCA
+    from sklearn.preprocessing import RobustScaler
+
+    try:
+        mat = df[avail].ffill().bfill().values
+        scaler = RobustScaler()
+        scaled_mat = scaler.fit_transform(mat)
+        scaled_mat = np.nan_to_num(scaled_mat, nan=0.0, posinf=0.0, neginf=0.0)
+
+        n_comp = min(n_components, len(avail))
+        pca = PCA(n_components=n_comp, random_state=42)
+        factors = pca.fit_transform(scaled_mat)
+
+        for i in range(n_comp):
+            df[f'PCA_Factor_{i+1}'] = factors[:, i]
+
+        for i in range(n_comp + 1, n_components + 1):
+            df[f'PCA_Factor_{i}'] = 0.0
+    except Exception:
+        for i in range(1, n_components + 1):
+            df[f'PCA_Factor_{i}'] = 0.0
+
     return df
+
+
+def compute_vif_filter(X: pd.DataFrame, thresh: float = 12.0) -> list:
+    """
+    Module 3 (Econometrics - Multicollinearity Diagnostics):
+    Calculates Variance Inflation Factor (VIF = 1 / (1 - R_j^2)) for candidate features.
+    Sequentially eliminates the predictor with the highest VIF exceeding `thresh` until
+    all remaining predictors are orthogonal and non-collinear.
+    """
+    cols = list(X.columns)
+    if len(cols) <= 2 or len(X) < 20:
+        return cols
+
+    X_mat = X[cols].ffill().bfill().values
+    std_vals = np.std(X_mat, axis=0)
+    keep_indices = [i for i, s in enumerate(std_vals) if s > 1e-6]
+    cols = [cols[i] for i in keep_indices]
+    if len(cols) <= 2:
+        return cols
+
+    from sklearn.linear_model import LinearRegression
+
+    current_cols = list(cols)
+    while len(current_cols) > 4:
+        vifs = []
+        cur_mat = X[current_cols].ffill().bfill().values
+        for j in range(len(current_cols)):
+            y_j = cur_mat[:, j]
+            X_j = np.delete(cur_mat, j, axis=1)
+            reg = LinearRegression().fit(X_j, y_j)
+            r2 = max(0.0, min(0.9999, float(reg.score(X_j, y_j))))
+            vif = 1.0 / (1.0 - r2)
+            vifs.append((current_cols[j], vif))
+
+        vifs.sort(key=lambda x: x[1], reverse=True)
+        worst_col, max_vif = vifs[0]
+        if max_vif > thresh:
+            current_cols.remove(worst_col)
+        else:
+            break
+
+    return current_cols
 
 
 def _hawkes_intensity(
@@ -561,3 +739,73 @@ def fit_return_distribution(df: pd.DataFrame) -> dict:
         "student_t_df": round(float(df_t), 2),
         "tail_risk": tail_risk,
     }
+
+
+def attach_cot_features(
+    df: pd.DataFrame,
+    symbol: Optional[str] = None,
+    cot_df: Optional[pd.DataFrame] = None,
+    cache_dir: str = "data/cot",
+) -> pd.DataFrame:
+    """
+    Attaches Larry Williams Commitments of Traders (COT) features to any price DataFrame.
+    Zero-lookahead: Uses point-in-time merge_asof based on Friday 15:30 ET publication release.
+    Features added:
+      - comm_net, comm_short_pct_oi, comm_short_extreme_55
+      - cot_index_156w, cot_index_52w, cot_index_26w
+      - willco_26w_net, willco_26w_short
+      - comm_208w_extreme_high, comm_208w_extreme_low
+      - public_index_156w, large_index_156w
+      - oi_stoch_52w, inside_oi_regime
+      - progo, progo_bull_divergence, progo_bear_divergence
+      - cot_directional_regime (1 = Long Only, -1 = Short Only)
+    """
+    try:
+        from cot_engine import (
+            filter_market_cot,
+            merge_cot_with_price,
+            compute_all_cot_features,
+            DirectionalRegimeFilter,
+            load_cftc_history,
+            generate_synthetic_cot,
+        )
+
+        if cot_df is None:
+            if symbol:
+                current_year = pd.Timestamp.now().year
+                full_cot = load_cftc_history(start_year=max(2018, current_year - 5), cache_dir=cache_dir)
+                if full_cot is not None and len(full_cot) > 0:
+                    market_cot = filter_market_cot(full_cot, symbol)
+                else:
+                    market_cot = generate_synthetic_cot(market_name=symbol)
+            else:
+                market_cot = generate_synthetic_cot()
+        else:
+            market_cot = cot_df
+
+        if market_cot is None or len(market_cot) == 0:
+            return df
+
+        # Enrich COT dataframe with all indicators
+        enriched_cot = compute_all_cot_features(market_cot, include_daily_progo=False)
+
+        # Merge with price bars using point-in-time as-of join
+        merged = merge_cot_with_price(df, enriched_cot)
+
+        # Directional Regime Filter
+        regime_filter = DirectionalRegimeFilter(cot_window=26)
+        merged["cot_directional_regime"] = regime_filter.get_regime(merged)
+
+        # Attach daily ProGo if OHLC available
+        if "Close" in merged.columns and "Open" in merged.columns:
+            from cot_engine import progo_oscillator
+            progo_df = progo_oscillator(merged, window=14)
+            for c in progo_df.columns:
+                merged[c] = progo_df[c]
+
+        return merged
+
+    except Exception as e:
+        print(f"[Features] Notice: Could not attach COT features: {e}")
+        return df
+

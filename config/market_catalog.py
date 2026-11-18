@@ -494,6 +494,10 @@ def get_price_decimals(price: float, symbol: str = "") -> int:
         return 5
     if sym == "NG=F":
         return 4
+    if sym == "SI=F":
+        return 3
+    if sym in ("CL=F", "BZ=F", "GC=F", "BTC-USD", "^GSPC"):
+        return 2
     abs_p = abs(float(price)) if price is not None else 100.0
     if abs_p == 0:
         return 2

@@ -35,11 +35,19 @@ class ModelValidator:
         Returns:
             Dict with all validation metrics
         """
+        # Macro F1 and Chance Rate (MIT/PFN TimesFM financial fine-tuning benchmark)
+        macro_f1 = float(f1_score(y_true, y_pred, average="macro", zero_division=0))
+        total_samples = len(y_true)
+        p_up = float(np.sum(y_true == 1) / max(total_samples, 1))
+        chance_rate = float(p_up**2 + (1.0 - p_up)**2)
+
         metrics = {
             "accuracy": float(accuracy_score(y_true, y_pred)),
             "precision": float(precision_score(y_true, y_pred, zero_division=0)),
             "recall": float(recall_score(y_true, y_pred, zero_division=0)),
             "f1_score": float(f1_score(y_true, y_pred, zero_division=0)),
+            "macro_f1": macro_f1,
+            "chance_rate": chance_rate,
             "roc_auc": float(roc_auc_score(y_true, y_pred_proba)) if len(np.unique(y_true)) > 1 else 0.5,
             "timestamp": datetime.now().isoformat()
         }
@@ -189,6 +197,13 @@ class BacktestMetrics:
         wins = [p for p in pnls if p > 0]
         losses = [p for p in pnls if p < 0]
         
+        # Total notional entry traded for Neutral Cost computation
+        entry_costs = [abs(float(t.get("entry_price", 1.0))) for t in trades]
+        tot_traded_val = sum(entry_costs)
+        # Neutral Cost (%) = Break-even transaction cost percentage that zeroes out PnL
+        # Divided by 2 to account for both round-trip legs (buy & sell)
+        neutral_cost_pct = (float(total_pnl) / tot_traded_val * 100.0 / 2.0) if tot_traded_val > 1e-9 else 0.0
+
         metrics = {
             "total_return": float(total_pnl),
             "trade_count": len(trades),
@@ -200,10 +215,22 @@ class BacktestMetrics:
             "avg_trade": float(np.mean(pnls)) if pnls else 0.0,
             "profit_factor": float(sum(wins) / abs(sum(losses))) if losses and sum(losses) != 0 else 0.0,
             "best_trade": float(max(pnls)) if pnls else 0.0,
-            "worst_trade": float(min(pnls)) if pnls else 0.0
+            "worst_trade": float(min(pnls)) if pnls else 0.0,
+            "neutral_cost_pct": float(neutral_cost_pct),
         }
         
         return metrics
+
+    @staticmethod
+    def calculate_neutral_cost(pnl_sum: float, total_trade_volume: float) -> float:
+        """
+        Calculate Neutral Cost (%) as defined in Fu et al. (MIT/PFN 2024):
+        The break-even transaction cost percentage that zeroes out cumulative PnL.
+        Formula: (Total PnL / Total Trade Volume) * 100 / 2 (accounting for buy/sell actions).
+        """
+        if total_trade_volume <= 1e-9:
+            return 0.0
+        return float((pnl_sum / total_trade_volume) * 100.0 / 2.0)
     
     @staticmethod
     def calculate_risk_metrics(equity_curve: list) -> Dict:

@@ -131,6 +131,15 @@ class MultiAlphaEngine:
         # Dynamic Regime Weighting: boost Trend & Momentum when Hurst > 0.52 / ADX high;
         # boost Mean-Reversion & Order Flow when Hurst < 0.48
         dyn_w = dict(self.weights)
+
+        # --- Alpha 7: Larry Williams COT Commercial Positioning & Flow ---
+        if 'cot_index_26w' in latest or 'willco_26w_net' in latest:
+            cot_idx = float(latest.get('cot_index_26w', latest.get('willco_26w_net', 50.0)))
+            if not np.isnan(cot_idx):
+                a7_score = float(np.clip((cot_idx - 50.0) / 40.0, -1.0, 1.0))
+                alphas["alpha_7_cot_commercial"] = round(a7_score, 4)
+                dyn_w["alpha_7_cot_commercial"] = 0.20
+
         if hurst > 0.52 or adx_norm > 0.28:
             dyn_w["alpha_1_trend"] *= 1.35
             dyn_w["alpha_4_relative_strength"] *= 1.25
